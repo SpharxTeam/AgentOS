@@ -58,7 +58,6 @@ flowchart TD
             M1 <--> M2
         end
 
-        %% 三层间的反馈闭环
         Cognition -->|任务分配| Execution
         Execution -->|执行反馈| Cognition
         Execution -->|记忆存储| MemoryEvolution
@@ -66,15 +65,7 @@ flowchart TD
         MemoryEvolution -->|规范更新| Execution
     end
 
-    %% 标注
-    linkStyle 0 stroke:#090,stroke-width:3px
-    linkStyle 1 stroke:#090,stroke-width:2px
-    linkStyle 2 stroke:#090,stroke-width:2px
-    linkStyle 3 stroke:#090,stroke-width:2px
-    linkStyle 4 stroke:#090,stroke-width:2px
-
 ```
-
 ### 🧠 双系统理论工程化
 
 *   每个智能体均内嵌 **System 1（快速响应）** 与 **System 2（深度思考）**，实现自我纠错与交叉验证。
@@ -86,7 +77,57 @@ flowchart TD
 *   **Streaming 共识**：Token 生成过程中持续检测共识，满足条件立即终止，节省 1.1‑4.4 倍 Token。
 *   **Quorum-fast 决策**：不等待全体，延迟降低 20 倍。
 *   **语义切片**：将上下文窗口视为可寻址语义空间，按需加载历史片段。
+Sequence Diagram
+```mermaid
+sequenceDiagram
+    participant User as 用户
+    participant Router as 路由层
+    participant DualModel as 双模型协调器
+    participant Planner as 增量规划器
+    participant Dispatcher as 调度官
+    participant AgentPool as Agent池
+    participant Agent as 专业Agent (1+1)
+    participant Units as 执行单元
+    participant Tracer as 责任链追踪器
+    participant Memory as 记忆系统
+    participant Committees as 进化委员会
 
+    User->>Router: 输入指令 "开发电商应用"
+    Router->>Router: 意图理解 & 复杂度评估
+    Router->>DualModel: 启动双模型协同 (主+辅)
+    DualModel->>Planner: 生成初始规划 (第一阶段DAG)
+    Planner->>Dispatcher: 任务清单 [需求分析, 设计, ...]
+
+    loop 每个就绪任务
+        Dispatcher->>AgentPool: 查询合适Agent
+        AgentPool->>Dispatcher: 返回Agent实例
+        Dispatcher->>Agent: 分配任务 (如需求分析)
+        activate Agent
+        Agent->>Agent: System 1快速响应
+        Agent->>Agent: System 2交叉验证
+        Agent->>Units: 调用执行单元 (文件/API等)
+        Units-->>Agent: 执行结果
+        Agent-->>Dispatcher: 任务完成
+        deactivate Agent
+        Dispatcher->>Tracer: 记录执行轨迹 (TraceID)
+        Tracer->>Memory: 存储L1日志
+        Dispatcher-->>Planner: 任务完成通知
+        Planner->>Planner: 更新DAG状态
+    end
+
+    Planner->>Dispatcher: 所有任务完成
+    Dispatcher-->>User: 返回最终产出
+
+    loop 进化阶段
+        Memory->>Memory: L1→L2摘要
+        Memory->>Memory: L2→L3向量化
+        Committees->>Memory: 读取L3聚类
+        Committees->>Committees: 挖掘L4模式
+        Committees->>Committees: 更新技术规范/Agent契约
+        Committees-->>Dispatcher: 规则更新生效
+    end
+
+```
 ### 🧩 动态团队组建（角色市场）
 
 *   **Agent 契约**：机器可读的能力描述（输入输出 Schema、成本预估、信任指标）。
@@ -122,7 +163,6 @@ flowchart TD
 
 ```mermaid
 
-%%{init: {'theme': 'base', 'themeVariables': { 'primaryColor': '#f0f0f0', 'primaryBorderColor': '#333', 'primaryTextColor': '#000', 'lineColor': '#666', 'tertiaryColor': '#fff'}}}%%
 flowchart TD
     subgraph User["用户界面"]
         UI[("用户指令")]
@@ -190,7 +230,6 @@ flowchart TD
         Data["工作区数据 data/"]
     end
 
-    %% 连接关系
     UI --> Router
     Router --> DualModel
     DualModel --> Planner
@@ -238,13 +277,7 @@ flowchart TD
     Data --> SharedMemory
     Data --> Audit
 
-    %% 三层反馈闭环标注
-    linkStyle 12 stroke:#0a0,stroke-width:2px
-    linkStyle 18 stroke:#00a,stroke-width:2px
-    linkStyle 23 stroke:#a00,stroke-width:2px
-
 ```
-
 ## 🚀 快速开始
 
 ### 安装
