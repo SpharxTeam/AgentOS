@@ -34,6 +34,7 @@ AgentOS 的目标是：当你说“开发一个电商应用”时，系统不是
 *   **认知层**：意图理解、双模型协同（1 大 +2 小冗余）、增量规划、动态调度。
 *   **行动层**：专业 Agent 池（1+1 双模型简配）、可验证执行单元、补偿事务、责任链追踪。
 *   **记忆与进化层**：深层记忆（L1‑L4）、世界模型抽象、共识语义层、四委员会（协调/技术/审计/团队）。
+
 ```mermaid
 flowchart TD
     subgraph CoreLoopThree["CoreLoopThree 基础架构"]
@@ -71,6 +72,7 @@ flowchart TD
     linkStyle 2 stroke:#090,stroke-width:2px
     linkStyle 3 stroke:#090,stroke-width:2px
     linkStyle 4 stroke:#090,stroke-width:2px
+
 ```
 
 ### 🧠 双系统理论工程化
@@ -117,7 +119,9 @@ flowchart TD
 *   健康检查（`agentos doctor`）一键诊断。
 
 ## 🧬 架构总览
+
 ```mermaid
+
 %%{init: {'theme': 'base', 'themeVariables': { 'primaryColor': '#f0f0f0', 'primaryBorderColor': '#333', 'primaryTextColor': '#000', 'lineColor': '#666', 'tertiaryColor': '#fff'}}}%%
 flowchart TD
     subgraph User["用户界面"]
@@ -238,6 +242,7 @@ flowchart TD
     linkStyle 12 stroke:#0a0,stroke-width:2px
     linkStyle 18 stroke:#00a,stroke-width:2px
     linkStyle 23 stroke:#a00,stroke-width:2px
+
 ```
 
 ## 🚀 快速开始
