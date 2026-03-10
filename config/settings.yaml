@@ -1,0 +1,27 @@
+# Copyright (c) 2026 SPHARX. All Rights Reserved. "From data intelligence emerges."
+# 系统级配置文件
+
+# 日志级别: debug, info, warning, error
+log_level: info
+
+# 并发控制
+max_concurrency: 10          # 最大并发任务数
+max_agents_per_task: 5       # 每个任务最多同时调用的Agent数
+
+# 缓存设置
+cache:
+  memory_size_mb: 1024       # 内存缓存大小
+  ttl_seconds: 3600          # 缓存有效期
+
+# 超时设置
+timeout:
+  default_ms: 30000          # 默认超时30秒
+  critical_ms: 60000         # 关键任务超时60秒
+
+# 工作区路径（相对于项目根目录或绝对路径）
+workspace_path: "./data/workspace"
+
+# 健康检查
+health_check:
+  interval_seconds: 60
+  failure_threshold: 3

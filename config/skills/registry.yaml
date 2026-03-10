@@ -1,0 +1,28 @@
+# Copyright (c) 2026 SPHARX. All Rights Reserved. "From data intelligence emerges."
+# 技能注册列表
+
+skills:
+  - skill_id: shell_skill
+    version: 1.0.0
+    source: builtin
+    active: true
+
+  - skill_id: filesystem_skill
+    version: 1.0.0
+    source: builtin
+    active: true
+
+  - skill_id: github_skill
+    version: 1.0.0
+    source: builtin
+    active: true
+
+  - skill_id: browser_skill
+    version: 1.0.0
+    source: builtin
+    active: true
+
+  - skill_id: database_skill
+    version: 1.0.0
+    source: builtin
+    active: true

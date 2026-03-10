@@ -1,0 +1,29 @@
+# Python
+__pycache__/
+*.py[cod]
+*.so
+.Python
+env/
+venv/
+.env
+.venv
+poetry.lock
+*.pyc
+
+# IDE
+.vscode/
+.idea/
+
+# Data
+data/workspace/
+data/registry/*.db
+data/logs/*.log
+
+# Packages
+*.egg-info/
+dist/
+build/
+
+# OS
+.DS_Store
+Thumbs.db
