@@ -1,0 +1,20 @@
+# Copyright (c) 2026 SPHARX. All Rights Reserved. "From data intelligence emerges."
+# Token分配策略
+
+strategy: dynamic   # 可选: fixed, dynamic, adaptive
+
+# 动态策略参数
+dynamic:
+  base_budget: 10000          # 基础Token预算
+  complexity_multiplier: 2.0  # 复杂任务倍数
+  critical_multiplier: 5.0    # 关键任务倍数
+  max_budget: 100000          # 单任务最大Token
+
+# 固定策略（当 strategy = fixed 时使用）
+fixed:
+  simple: 2000
+  complex: 10000
+  critical: 50000
+
+# Token独特性缓存阈值
+uniqueness_cache_threshold: 0.3   # 低于此值建议缓存

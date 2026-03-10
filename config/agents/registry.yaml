@@ -1,0 +1,52 @@
+# Copyright (c) 2026 SPHARX. All Rights Reserved. "From data intelligence emerges."
+# Agent注册列表（自动生成或手动维护）
+
+agents:
+  - agent_id: product_manager_v1
+    role: product_manager
+    version: 1.0.0
+    source: builtin
+    active: true
+    trust_score: 0.9
+
+  - agent_id: architect_v1
+    role: architect
+    version: 1.0.0
+    source: builtin
+    active: true
+    trust_score: 0.85
+
+  - agent_id: frontend_v1
+    role: frontend
+    version: 1.0.0
+    source: builtin
+    active: true
+    trust_score: 0.88
+
+  - agent_id: backend_v1
+    role: backend
+    version: 1.0.0
+    source: builtin
+    active: true
+    trust_score: 0.87
+
+  - agent_id: tester_v1
+    role: tester
+    version: 1.0.0
+    source: builtin
+    active: true
+    trust_score: 0.86
+
+  - agent_id: devops_v1
+    role: devops
+    version: 1.0.0
+    source: builtin
+    active: true
+    trust_score: 0.84
+
+  - agent_id: security_v1
+    role: security
+    version: 1.0.0
+    source: builtin
+    active: true
+    trust_score: 0.82

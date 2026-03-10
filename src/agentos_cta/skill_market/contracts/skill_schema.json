@@ -1,0 +1,91 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Skill Contract",
+  "description": "Schema for AgentOS skill description",
+  "type": "object",
+  "required": ["skill_id", "name", "version", "description", "tools", "compatible_agents"],
+  "properties": {
+    "skill_id": {
+      "type": "string",
+      "description": "Unique identifier for the skill"
+    },
+    "name": {
+      "type": "string",
+      "description": "Human-readable name"
+    },
+    "version": {
+      "type": "string",
+      "description": "Semantic version (e.g., 1.2.3)"
+    },
+    "description": {
+      "type": "string",
+      "description": "Brief description of the skill"
+    },
+    "author": {
+      "type": "string",
+      "description": "Author or organization"
+    },
+    "license": {
+      "type": "string",
+      "description": "License type"
+    },
+    "homepage": {
+      "type": "string",
+      "format": "uri",
+      "description": "Project homepage"
+    },
+    "repository": {
+      "type": "string",
+      "format": "uri",
+      "description": "Source code repository"
+    },
+    "tools": {
+      "type": "array",
+      "description": "List of tools provided by this skill",
+      "items": {
+        "type": "object",
+        "required": ["name", "description", "input_schema", "output_schema"],
+        "properties": {
+          "name": {"type": "string"},
+          "description": {"type": "string"},
+          "input_schema": {"type": "object"},
+          "output_schema": {"type": "object"},
+          "permissions": {
+            "type": "array",
+            "items": {"type": "string"}
+          },
+          "cost_estimate": {
+            "type": "integer",
+            "description": "Estimated token cost per call"
+          }
+        }
+      }
+    },
+    "dependencies": {
+      "type": "array",
+      "description": "List of skill IDs that this skill depends on",
+      "items": {
+        "type": "object",
+        "required": ["skill_id", "version_constraint"],
+        "properties": {
+          "skill_id": {"type": "string"},
+          "version_constraint": {"type": "string", "description": "e.g., >=1.0.0, <2.0.0"}
+        }
+      }
+    },
+    "compatible_agents": {
+      "type": "array",
+      "description": "Agent roles that can use this skill",
+      "items": {"type": "string"}
+    },
+    "required_config": {
+      "type": "array",
+      "description": "Required configuration keys (e.g., API keys)",
+      "items": {"type": "string"}
+    },
+    "install_notes": {
+      "type": "string",
+      "description": "Additional installation instructions"
+    }
+  }
+}

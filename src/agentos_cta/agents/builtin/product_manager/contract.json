@@ -1,0 +1,33 @@
+{
+  "agent_id": "product_manager_v1",
+  "agent_name": "Product Manager",
+  "version": "1.0.0",
+  "role": "product_manager",
+  "description": "Responsible for understanding requirements and writing PRDs",
+  "capabilities": [
+    {
+      "name": "requirement_analysis",
+      "description": "Analyze user needs and produce structured requirements",
+      "input_schema": {"type": "object", "properties": {"goal": {"type": "string"}}},
+      "output_schema": {"type": "object", "properties": {"prd": {"type": "string"}}},
+      "estimated_tokens": 5000,
+      "avg_duration_ms": 3000,
+      "success_rate": 0.92
+    }
+  ],
+  "models": {
+    "system1": "gpt-3.5-turbo",
+    "system2": "gpt-4"
+  },
+  "required_permissions": ["read_project_context", "write_project_artifacts"],
+  "cost_profile": {
+    "token_per_task_avg": 8000,
+    "api_cost_per_task": 0.02
+  },
+  "trust_metrics": {
+    "install_count": 0,
+    "rating": 0,
+    "verified_provider": false,
+    "last_audit": null
+  }
+}
