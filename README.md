@@ -34,6 +34,44 @@ AgentOS 的目标是：当你说“开发一个电商应用”时，系统不是
 *   **认知层**：意图理解、双模型协同（1 大 +2 小冗余）、增量规划、动态调度。
 *   **行动层**：专业 Agent 池（1+1 双模型简配）、可验证执行单元、补偿事务、责任链追踪。
 *   **记忆与进化层**：深层记忆（L1‑L4）、世界模型抽象、共识语义层、四委员会（协调/技术/审计/团队）。
+```
+flowchart TD
+    subgraph CoreLoopThree["CoreLoopThree 基础架构"]
+        direction TB
+
+        subgraph Cognition["认知层 (Cognition)"]
+            C1["System 1 (快速响应)<br/>· 意图理解<br/>· 复杂度评估<br/>· 资源匹配"]
+            C2["System 2 (深度思考)<br/>· 双模型协同 (1大+2小)<br/>· 增量规划<br/>· 调度决策"]
+            C1 <--> C2
+        end
+
+        subgraph Execution["行动层 (Execution)"]
+            E1["System 1 (快速执行)<br/>· 专业Agent 1+1 双模型<br/>· 常规任务处理<br/>· 工具调用"]
+            E2["System 2 (深度验证)<br/>· 结果交叉验证<br/>· 异常处理<br/>· 补偿事务"]
+            E1 <--> E2
+        end
+
+        subgraph MemoryEvolution["记忆与进化层 (Memory & Evolution)"]
+            M1["System 1 (记忆检索)<br/>· L1/L2 快速访问<br/>· 向量检索即时响应"]
+            M2["System 2 (模式挖掘)<br/>· L3/L4 深度分析<br/>· 世界模型抽象<br/>· 共识决策<br/>· 进化委员会"]
+            M1 <--> M2
+        end
+
+        %% 三层间的反馈闭环
+        Cognition -->|任务分配| Execution
+        Execution -->|执行反馈| Cognition
+        Execution -->|记忆存储| MemoryEvolution
+        MemoryEvolution -->|规则进化| Cognition
+        MemoryEvolution -->|规范更新| Execution
+    end
+
+    %% 标注
+    linkStyle 0 stroke:#090,stroke-width:3px
+    linkStyle 1 stroke:#090,stroke-width:2px
+    linkStyle 2 stroke:#090,stroke-width:2px
+    linkStyle 3 stroke:#090,stroke-width:2px
+    linkStyle 4 stroke:#090,stroke-width:2px
+```
 
 ### 🧠 双系统理论工程化
 
@@ -79,7 +117,128 @@ AgentOS 的目标是：当你说“开发一个电商应用”时，系统不是
 *   健康检查（`agentos doctor`）一键诊断。
 
 ## 🧬 架构总览
+```
+%%{init: {'theme': 'base', 'themeVariables': { 'primaryColor': '#f0f0f0', 'primaryBorderColor': '#333', 'primaryTextColor': '#000', 'lineColor': '#666', 'tertiaryColor': '#fff'}}}%%
+flowchart TD
+    subgraph User["用户界面"]
+        UI[("用户指令")]
+    end
 
+    subgraph Cognition["认知层 (Cognition)"]
+        direction TB
+        Router["路由层 Router<br/>意图理解·复杂度评估·资源匹配"]
+        DualModel["双模型协同协调器<br/>DualModelCoordinator (1大+2小)"]
+        Planner["增量规划器 IncrementalPlanner"]
+        Dispatcher["调度官 Dispatcher"]
+    end
+
+    subgraph Execution["行动层 (Execution)"]
+        direction TB
+        AgentPool["专业 Agent 池<br/>AgentPool (1+1双模型)"]
+        subgraph Units["执行单元池"]
+            ToolUnit["工具单元"]
+            CodeUnit["代码单元"]
+            APIUnit["API单元"]
+            FileUnit["文件单元"]
+            BrowserUnit["浏览器单元"]
+            DBUnit["数据库单元"]
+        end
+        Compensation["补偿事务管理器 CompensationManager"]
+        Tracer["责任链追踪器 TraceabilityTracer"]
+    end
+
+    subgraph MemoryEvolution["记忆与进化层 (Memory & Evolution)"]
+        direction TB
+        subgraph DeepMemory["深层记忆系统"]
+            L1["L1 Buffer"]
+            L2["L2 Summary"]
+            L3["L3 Vector"]
+            L4["L4 Pattern"]
+        end
+        WorldModel["世界模型抽象层<br/>SemanticSlicer/TemporalAligner/DriftDetector"]
+        Consensus["共识语义层<br/>QuorumFast/StabilityWindow/StreamingConsensus"]
+        SharedMemory["共享内存空间 SharedMemory<br/>中央看板·Agent注册中心·项目上下文"]
+        Committees["进化委员会<br/>协调·技术·审计·团队"]
+    end
+
+    subgraph Security["安全隔离层"]
+        Sandbox["虚拟工位 VirtualWorkbench"]
+        Permission["权限裁决引擎 PermissionEngine"]
+        Audit["工具调用审计 ToolAudit"]
+        Sanitizer["输入净化器 InputSanitizer"]
+    end
+
+    subgraph SkillMarket["技能市场模块"]
+        SkillRegistry["技能注册中心"]
+        SkillInstaller["技能安装器"]
+        SkillVersion["版本管理"]
+    end
+
+    subgraph Runtime["运行时管理"]
+        Gateway["网关 Gateway<br/>HTTP/WebSocket/stdio"]
+        Session["会话管理器 SessionManager"]
+        Telemetry["可观测性 Telemetry<br/>OpenTelemetry"]
+        Health["健康检查 HealthChecker"]
+    end
+
+    subgraph ConfigData["配置与数据"]
+        Config["配置文件 config/"]
+        Data["工作区数据 data/"]
+    end
+
+    %% 连接关系
+    UI --> Router
+    Router --> DualModel
+    DualModel --> Planner
+    Planner --> Dispatcher
+
+    Dispatcher --> AgentPool
+    AgentPool --> Units
+    Units --> Compensation
+    Compensation --> Tracer
+    Tracer -.-> |执行反馈| Planner
+
+    AgentPool -.-> |调用| Security
+    Units -.-> |权限检查| Security
+    Security --> Permission
+    Permission --> Sandbox
+    Sandbox --> Audit
+    Audit --> Sanitizer
+
+    AgentPool -.-> |技能查找| SkillMarket
+    SkillMarket --> SkillRegistry
+    SkillRegistry --> SkillInstaller
+    SkillInstaller --> SkillVersion
+
+    Tracer --> SharedMemory
+    SharedMemory --> DeepMemory
+    DeepMemory --> WorldModel
+    WorldModel --> Consensus
+    Consensus --> Committees
+    Committees -.-> |规则更新| AgentPool
+    Committees -.-> |契约更新| SkillMarket
+
+    Runtime --> Gateway
+    Gateway --> Session
+    Session --> Telemetry
+    Telemetry --> Health
+    Health -.-> |状态报告| SharedMemory
+
+    Config --> Router
+    Config --> AgentPool
+    Config --> Security
+    Config --> SkillMarket
+    Config --> Runtime
+
+    Data --> DeepMemory
+    Data --> SharedMemory
+    Data --> Audit
+
+    %% 三层反馈闭环标注
+    linkStyle 12 stroke:#0a0,stroke-width:2px
+    linkStyle 18 stroke:#00a,stroke-width:2px
+    linkStyle 23 stroke:#a00,stroke-width:2px
+```
 
 ## 🚀 快速开始
 
