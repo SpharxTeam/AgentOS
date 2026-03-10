@@ -1,25 +1,213 @@
 # AgentOS
-这是SPHARX开发的智能体操作系统
 
-## CoreLoopThree Architecture
-CoreLoopThree Architecture（简称 CTA），是融合现代系统工程、自动控制理论与前沿多智能体工程实践，面向复杂工业场景原创的三层一体化智能体操作系统架构。
+<p align="center">
+  <img src="https://img.shields.io/badge/license-GPLv3-blue.svg" alt="License: GPL v3">
+  <img src="https://img.shields.io/github/v/release/yourname/agentos" alt="GitHub release">
+  <img src="https://img.shields.io/github/issues/yourname/agentos" alt="GitHub issues">
+  <a href="https://arxiv.org/abs/2602.20934"><img src="https://img.shields.io/badge/arXiv-2602.20934-b31b1b.svg" alt="arXiv"></a>
+</p>
 
-### 核心设计
-CTA 架构以「思考 - 决策 - 行动 - 进化」全链路闭环为核心驱动，由三个强耦合、权责边界清晰的核心层级构成，实现全局可控、精确执行、自主进化的核心目标：
+<p align="center">
+  <strong>AgentOS</strong> —— 一个基于 CoreLoopThree 架构的智能体操作系统。<br>
+  让 AI 团队像人类组织一样协作：认知、行动、记忆与进化，三层一体，持续自驱。
+</p>
 
-- **认知层**（Cognition Layer）：系统的全局决策与管控中枢。具备类人元认知能力，可将用户模糊的定性需求转化为结构化定量目标，拆解生成 DAG 有向无环任务图，匹配并调度专业 Agent；同时通过「模拟执行 - 反思评估 - 规划调整」的微循环实现事前 / 事后自我纠错，维护 Agent 心智模型库，实现全局最优的团队管理与任务管控。
-- **行动层**（Execution Layer）：系统的精准执行与状态反馈中枢。将所有原子操作封装为标准化「执行单元」，通过契约测试保障执行可靠性，通过 Saga 补偿事务实现操作可回滚、可审计；精确执行认知层下发的任务指令，实时采集并反馈执行状态、预期与实际结果的差异数据，为闭环调节提供数据支撑。
-- **记忆与进化层**（Memory & Evolution Layer）：系统的经验沉淀与自主进化中枢。借鉴卷积神经网络（CNN）「多层卷积 - 池化」的核心思想，设计「记忆卷载」机制，将原始执行事件逐层抽象为事件摘要、语义向量、通用模式规则，实现信息压缩、模式发现与知识泛化；通过多维度进化委员会自动挖掘可复用的经验规则，驱动系统全链路能力的自主迭代进化。
+## 📖 项目简介
 
-## CoreLoopThree Architecture (English Version)
+AgentOS 是一个面向未来的智能体操作系统框架。它不再依赖单个超级智能体解决复杂问题，而是通过动态组建专业智能体团队，将工程控制的反馈思想与系统工程的层次分解方法相结合，实现“认知‑行动‑记忆与进化”三层一体的自动化协作。
 
-**CoreLoopThree Architecture** (hereinafter referred to as **CTA Architecture**) is an original three-tier integrated multi-agent operating system architecture designed for complex industrial scenarios. Built upon modern systems engineering, automatic control theory, and cutting-edge multi-agent engineering practices (circa 2026), it aims to bridge the gap between theoretical autonomy and industrial reliability.
+我们融合了相关领域的最新研究成果：
 
-### Core Design
-Centered on the full closed loop of **"Thinking-Decision-Action-Evolution"**, the CTA Architecture consists of three tightly coupled core layers with clear responsibility boundaries. This design achieves the core goals of globally controllable management, precise execution, and autonomous evolution:
+*   **双系统协同**（卡尼曼 System 1/System 2）
+*   **共识语义层**（Quorum‑fast 决策、Streaming 共识）
+*   **世界模型抽象**（语义切片、时间对齐、认知漂移检测）
+*   **技能市场**（独立安装、版本管理、依赖解析）
+*   **安全内生**（虚拟工位、权限裁决、输入净化）
 
-- **Cognition Layer**: The global decision-making and management center of the system. Equipped with human-like metacognitive abilities, it converts users' vague qualitative requirements into structured quantitative objectives. It decomposes tasks into a Directed Acyclic Graph (DAG) to match and schedule professional agents. Furthermore, it realizes pre-event and post-event self-correction through the micro-cycle of *"Simulation Execution → Reflection Evaluation → Plan Adjustment"*, while maintaining a **Theory of Mind (ToM)** model library for agents to achieve globally optimal team management and task control.
-  
-- **Execution Layer**: The precise execution and status feedback center of the system. It encapsulates all atomic operations into standardized **"Execution Units"**, ensuring execution reliability through contract testing. By leveraging the **Saga compensation transaction mechanism**, it guarantees that operations are rollbackable and auditable. This layer accurately executes task instructions issued by the Cognition Layer, collecting and feeding back execution status and the delta between expected and actual results in real time to support closed-loop regulation.
+AgentOS 的目标是：当你说“开发一个电商应用”时，系统不是调用一个超级智能体去写代码，而是自动组建一个团队——产品经理理解需求、架构师设计系统、前后端分工协作、测试工程师保障质量、运维工程师负责部署。这个团队会自我管理、自我进化，而你只需给出指令，等待结果。
 
-- **Memory & Evolution Layer**: The experience accumulation and autonomous evolution engine of the system. Drawing on the core idea of *"multi-layer convolution-pooling"* from Convolutional Neural Networks (CNN), it designs the **"Memory Convolution"** mechanism. This mechanism gradually abstracts original execution events into event summaries, semantic vectors, and general pattern rules, realizing information compression, pattern discovery, and knowledge generalization. Through a **multi-dimensional evolution committee**, the system automatically mines reusable experience rules, driving the autonomous iterative evolution of its full-link capabilities.
+## ✨ 核心特性
+
+### 🔁 三层一体（CoreLoopThree）
+
+*   **认知层**：意图理解、双模型协同（1 大 +2 小冗余）、增量规划、动态调度。
+*   **行动层**：专业 Agent 池（1+1 双模型简配）、可验证执行单元、补偿事务、责任链追踪。
+*   **记忆与进化层**：深层记忆（L1‑L4）、世界模型抽象、共识语义层、四委员会（协调/技术/审计/团队）。
+#### CoreLoopThree
+```
+CoreLoopThree Architecture  
+CoreLoopThree Architecture（简称 CTA）是基于“两论”思想，融合系统实践，面向工业级复杂场景原创的三层一体化智能体操作系统架构。
+核心设计：
+CTA由三个强耦合、全闭环的核心层级构成，形成 “思考 - 决策 - 行动 - 进化” 的循环：
+1. 认知（Cognition Layer）：系统的 “大脑”。具备类人元认知能力，不仅会将用户模糊需求转化为结构化任务、规划 DAG 任务图、调度专业 Agent，还会通过 “模拟执行 - 反思评估 - 调整规划” 的微循环自我纠错，同时维护对其他 Agent 的 “心智模型”，实现更智能的团队管理。
+2. 行动（Execution Layer）：系统的 “手脚”。将每一个原子操作封装为标准化的 “执行单元”，通过契约测试保证可靠性，通过 Saga 补偿事务保证可回滚性，精确执行认知层分配的任务，并实时反馈执行状态与差异数据。
+3. 记忆与进化（Memory & Evolution Layer）：系统的 “DNA 与演化引擎”。借鉴卷积神经网络（CNN）的 “多层卷积 - 池化” 思想，设计 “记忆卷载” 机制：将原始事件逐步抽象为事件摘要、语义向量、模式规则，实现信息压缩、模式发现、知识泛化；通过进化委员会自动挖掘可复用规则，驱动系统自主进化。
+```
+
+### 🧠 双系统理论工程化
+
+*   每个智能体均内嵌 **System 1（快速响应）** 与 **System 2（深度思考）**，实现自我纠错与交叉验证。
+*   认知层采用 **1 主 + 2 辅冗余架构**，确保高可用。
+
+### ⚡ Token 效率最大化
+
+*   **分层记忆**（Buffer → Summary → Vector → Pattern），高成本仅用于当前轮次。
+*   **Streaming 共识**：Token 生成过程中持续检测共识，满足条件立即终止，节省 1.1‑4.4 倍 Token。
+*   **Quorum-fast 决策**：不等待全体，延迟降低 20 倍。
+*   **语义切片**：将上下文窗口视为可寻址语义空间，按需加载历史片段。
+
+### 🧩 动态团队组建（角色市场）
+
+*   **Agent 契约**：机器可读的能力描述（输入输出 Schema、成本预估、信任指标）。
+*   **注册中心**：SQLite 存储所有 Agent 元数据，支持多目标优化调度。
+*   **调度官**：根据任务需求，自动组建临时团队，任务结束即解散。
+
+### 🛠️ 技能市场（Skill Market）
+
+*   独立模块，支持从 GitHub、本地、官方源安装技能。
+*   技能契约定义依赖、权限、版本，自动解析依赖。
+*   命令式管理：`skill install`、`skill list`、`skill search`。
+
+### 🔒 安全内生
+
+*   **虚拟工位**：每个 Agent 运行在独立沙箱，与用户真实设备隔离。
+*   **权限裁决引擎**：基于规则（非 LLM）判断操作权限，最小权限原则。
+*   **工具调用审计**：记录所有工具调用，支持异常检测与追溯。
+*   **输入净化器**：过滤恶意输入，防止提示词注入。
+
+### 🌍 世界模型抽象层
+
+*   **语义切片**：将上下文切分为可索引的语义块。
+*   **时间对齐**：确保多 Agent 间的时序一致性。
+*   **认知漂移检测**：识别并修正 Agent 对同一事实的理解偏差。
+
+### 📊 生产级可观测性
+
+*   OpenTelemetry 集成，分布式追踪。
+*   p95 延迟监控，Token 独特性预测。
+*   健康检查（`agentos doctor`）一键诊断。
+
+## 🧬 架构总览
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                            AgentOS CoreLoopThree                              │
+├─────────────────────────────────────────────────────────────────────────────┤
+│  ┌─────────────────────────────────────────────────────────────────────┐    │
+│  │                             认知层 (Cognition)                          │    │
+│  │  ┌──────────────┐  ┌──────────────┐  ┌──────────────────┐           │    │
+│  │  │ 意图理解     │→│ 复杂度评估   │→│ 资源匹配 (模型/Token) │           │    │
+│  │  └──────────────┘  └──────────────┘  └──────────────────┘           │    │
+│  │         ↓                                                           │    │
+│  │  ┌─────────────────────────────────────────────────────────────┐   │    │
+│  │  │                   双模型协同协调器 (1 大 +2 小)                    │   │    │
+│  │  └─────────────────────────────────────────────────────────────┘   │    │
+│  │         ↓                                                           │    │
+│  │  ┌─────────────────────────────────────────────────────────────┐   │    │
+│  │  │                        增量规划器                              │   │    │
+│  │  └─────────────────────────────────────────────────────────────┘   │    │
+│  │         ↓                                                           │    │
+│  │  ┌─────────────────────────────────────────────────────────────┐   │    │
+│  │  │                        调度官 (Dispatcher)                     │   │    │
+│  │  └─────────────────────────────────────────────────────────────┘   │    │
+│  └─────────────────────────────────────────────────────────────────────┘    │
+│                              ↓                                                │
+│  ┌─────────────────────────────────────────────────────────────────────┐    │
+│  │                             行动层 (Execution)                          │    │
+│  │  ┌─────────────────────────────────────────────────────────────┐   │    │
+│  │  │                        专业 Agent 池 (1+1 双模型)                  │   │    │
+│  │  └─────────────────────────────────────────────────────────────┘   │    │
+│  │         ↓                                                           │    │
+│  │  ┌─────────────────────────────────────────────────────────────┐   │    │
+│  │  │                        执行单元池                              │   │    │
+│  │  └─────────────────────────────────────────────────────────────┘   │    │
+│  │         ↓                                                           │    │
+│  │  ┌─────────────────────────────────────────────────────────────┐   │    │
+│  │  │                  补偿事务管理器 + 责任链追踪器                  │   │    │
+│  │  └─────────────────────────────────────────────────────────────┘   │    │
+│  └─────────────────────────────────────────────────────────────────────┘    │
+│                              ↓                                                │
+│  ┌─────────────────────────────────────────────────────────────────────┐    │
+│  │                        记忆与进化层 (Memory & Evolution)               │    │
+│  │  ┌──────────┐    ┌──────────┐    ┌──────────┐    ┌──────────┐      │    │
+│  │  │ L1 Buffer│ → │ L2 Summary│ → │ L3 Vector│ → │ L4 Pattern│      │    │
+│  │  └──────────┘    └──────────┘    └──────────┘    └──────────┘      │    │
+│  │  ┌─────────────────────────────────────────────────────────────┐   │    │
+│  │  │              世界模型抽象层 + 共识语义层                      │   │    │
+│  │  └─────────────────────────────────────────────────────────────┘   │    │
+│  │  ┌─────────────────────────────────────────────────────────────┐   │    │
+│  │  │                   进化委员会 (四委员会)                        │   │    │
+│  │  └─────────────────────────────────────────────────────────────┘   │    │
+│  └─────────────────────────────────────────────────────────────────────┘    │
+│                              ↑                                                │
+│                     三层反馈闭环 (执行↔规划↔进化)                              │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+## 🚀 快速开始
+
+### 安装
+
+# 一键安装（Linux/macOS）
+curl -fsSL https://agentos.org/install.sh | bash
+
+# 或使用 pip
+pip install agentos-cta
+
+# 初始化配置
+agentos init
+
+### 启动服务
+
+# 本地开发模式
+agentos gateway start --port 18789
+
+# 健康检查
+agentos doctor
+
+### 第一个示例：电商应用开发
+
+# 克隆示例
+git clone https://github.com/yourname/agentos-examples
+cd agentos-examples/ecommerce_dev
+
+# 运行（自动组建团队）
+./run.sh
+
+## 📚 文档
+
+*   [CoreLoopThree 架构详解]()
+*   [Agent 契约规范]()
+*   [Skill 市场使用指南]()
+*   [安全配置]()
+*   [API 参考]()
+
+## 🤝 贡献
+
+我们热烈欢迎社区贡献！无论是提交 bug 报告、功能建议，还是贡献代码、Agent、Skill，请阅读我们的 [贡献指南]()。
+
+*   开发环境搭建见 [开发者手册]()
+*   所有贡献需通过契约测试和审计委员会审查
+*   重大变更请先开 issue 讨论
+
+## 📄 许可证
+
+AgentOS 使用 GNU General Public License v3.0 开源。详见 [LICENSE](LICENSE) 文件。
+
+## 🙏 致谢
+
+AgentOS 的设计与实现离不开以下开源项目与学术研究的启发：
+
+*   **OpenClaw** —— 技能市场与医生自检机制
+*   **三省六部** —— 多智能体分工与治理思想
+*   **Agent-Kernel** —— 模块化微内核架构
+*   **CogniGUI** —— 双系统理论与 GRPO 机制
+*   **Architecting AgentOS (arXiv:2602.20934)** —— 可寻址语义空间
+*   **Agentic Consensus (arXiv:2512.20184)** —— 共识驱动早停与 Quorum‑fast 决策
+*   **NVIDIA NeMo Agent Toolkit** —— Token 独特性预测与生产级实践
+*   **女娲智能体 OS** —— 虚拟工位安全沙箱
+*   **IETF ADOL 草案** —— 数据优化层设计
+
+特别感谢“系统工程双论”提供的哲学基石，以及丹尼尔·卡尼曼双系统理论对认知架构的指引。
+
+<p align="center">
+  <sub>Built with ❤️ by the AgentOS community</sub>
+</p>
