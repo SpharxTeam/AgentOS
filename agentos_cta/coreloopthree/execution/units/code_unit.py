@@ -19,7 +19,6 @@ class CodeUnit(ExecutionUnit):
         if not code:
             raise ToolExecutionError("No code provided")
 
-        # 根据语言选择执行方式
         if language == "python":
             return await self._run_python(code)
         elif language == "javascript":
@@ -28,12 +27,10 @@ class CodeUnit(ExecutionUnit):
             raise ToolExecutionError(f"Unsupported language: {language}")
 
     async def _run_python(self, code: str) -> Dict[str, Any]:
-        # 使用 subprocess 在隔离环境中运行
         with tempfile.NamedTemporaryFile(mode='w', suffix='.py', delete=False) as f:
             f.write(code)
             f.flush()
             try:
-                # 超时控制
                 result = subprocess.run(
                     ["python", f.name],
                     capture_output=True,
@@ -50,7 +47,6 @@ class CodeUnit(ExecutionUnit):
                 os.unlink(f.name)
 
     async def _run_javascript(self, code: str) -> Dict[str, Any]:
-        # 类似使用 node
         with tempfile.NamedTemporaryFile(mode='w', suffix='.js', delete=False) as f:
             f.write(code)
             f.flush()

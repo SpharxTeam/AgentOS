@@ -2,6 +2,7 @@
 # API 调用执行单元。
 
 import aiohttp
+import asyncio
 from typing import Dict, Any
 from .base_unit import ExecutionUnit
 from agentos_cta.utils.error_types import ToolExecutionError
@@ -68,6 +69,5 @@ class APIUnit(ExecutionUnit):
         }
 
     def is_idempotent(self) -> bool:
-        # 根据方法判断：GET、HEAD 等幂等，其他默认否
         method = self.config.get("default_method", "GET").upper()
         return method in ["GET", "HEAD", "OPTIONS"]

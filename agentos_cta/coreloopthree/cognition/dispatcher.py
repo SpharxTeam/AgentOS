@@ -43,19 +43,17 @@ class Dispatcher:
         Returns:
             选中的 Agent 信息（包含 agent_id、契约等），若无可选返回 None。
         """
-        # 查询注册中心中符合角色要求的 Agent
         candidates = await self.registry.query_agents(role=task.agent_role, task_schema=task.input_schema)
 
         if not candidates:
             logger.warning(f"No agents found for role {task.agent_role}")
             return None
 
-        # 多目标评分
         scored = []
         for agent in candidates:
-            cost_score = 1.0 / (agent.get('cost_estimate', 1) + 1)  # 成本越低分越高
-            perf_score = agent.get('success_rate', 0.5)              # 成功率
-            trust_score = agent.get('trust_score', 0.5)              # 信任度
+            cost_score = 1.0 / (agent.get('cost_estimate', 1) + 1)
+            perf_score = agent.get('success_rate', 0.5)
+            trust_score = agent.get('trust_score', 0.5)
 
             total = (self.weights['cost'] * cost_score +
                      self.weights['performance'] * perf_score +
@@ -72,9 +70,7 @@ class Dispatcher:
         向选中的 Agent 分配任务并等待执行结果。
         实际应通过 runtime 调用 Agent，这里模拟返回。
         """
-        # 模拟执行延迟
         await asyncio.sleep(1)
-        # 模拟执行结果
         result = {
             "task_id": task.task_id,
             "status": "success",
@@ -96,11 +92,9 @@ class Dispatcher:
             if not ready_tasks:
                 break
 
-            # 并发执行所有就绪任务
             async def execute_one(task: TaskNode):
                 agent = await self.select_agent(task, context)
                 if agent is None:
-                    # 无可用 Agent，标记失败
                     task.status = "failed"
                     task.error = "No agent available"
                     return task.task_id, None
@@ -118,7 +112,6 @@ class Dispatcher:
                 if result:
                     results[task_id] = result
 
-        # 检查是否有未完成或失败的任务
         all_success = all(node.status == 'succeeded' for node in plan.dag.nodes.values())
         return {
             "plan_id": plan.plan_id,

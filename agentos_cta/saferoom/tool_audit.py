@@ -1,124 +1,121 @@
 # Copyright (c) 2026 SPHARX. All Rights Reserved. "From data intelligence emerges."
-# 工具调用审计模块。
+# 工具调用审计：记录所有工具调用，支持异常检测和追溯。
 
-import json
-import sqlite3
-from pathlib import Path
-from typing import Dict, Any, Optional, List
-import uuid
+import asyncio
 import time
+import uuid
+from typing import Dict, Any, Optional, List
 from agentos_cta.utils.structured_logger import get_logger
-from .schemas import AuditRecord
+from agentos_cta.utils.error_types import SecurityError
+from .schemas import AuditEvent, AuditSeverity
 
 logger = get_logger(__name__)
 
 
 class ToolAudit:
     """
-    工具调用审计。
-    记录所有工具调用，支持异常检测与追溯。
+    工具调用审计器。
+    记录每次工具调用的详细信息，支持异常检测和事后追溯。
     """
 
-    def __init__(self, db_path: str = "data/security/audit.db"):
-        self.db_path = Path(db_path)
-        self.db_path.parent.mkdir(parents=True, exist_ok=True)
-        self._init_db()
-
-    def _init_db(self):
-        """初始化 SQLite 表。"""
-        conn = sqlite3.connect(str(self.db_path))
-        cursor = conn.cursor()
-        cursor.execute("""
-            CREATE TABLE IF NOT EXISTS audit_log (
-                record_id TEXT PRIMARY KEY,
-                agent_id TEXT NOT NULL,
-                tool_name TEXT NOT NULL,
-                input_data TEXT,
-                result TEXT,
-                success INTEGER,
-                error TEXT,
-                timestamp REAL,
-                trace_id TEXT,
-                permission_granted INTEGER,
-                permission_check_id TEXT
-            )
-        """)
-        cursor.execute("CREATE INDEX IF NOT EXISTS idx_agent ON audit_log(agent_id)")
-        cursor.execute("CREATE INDEX IF NOT EXISTS idx_timestamp ON audit_log(timestamp)")
-        conn.commit()
-        conn.close()
-
-    async def record(self, record: AuditRecord) -> str:
-        """记录一条审计记录。"""
-        conn = sqlite3.connect(str(self.db_path))
-        cursor = conn.cursor()
-        try:
-            cursor.execute("""
-                INSERT INTO audit_log
-                (record_id, agent_id, tool_name, input_data, result, success, error,
-                 timestamp, trace_id, permission_granted, permission_check_id)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            """, (
-                record.record_id,
-                record.agent_id,
-                record.tool_name,
-                json.dumps(record.input_data),
-                json.dumps(record.result) if record.result else None,
-                1 if record.success else 0,
-                record.error,
-                record.timestamp,
-                record.trace_id,
-                1 if record.permission_granted else 0,
-                record.permission_check_id
-            ))
-            conn.commit()
-            return record.record_id
-        finally:
-            conn.close()
-
-    async def query(self, agent_id: Optional[str] = None,
-                    start_time: Optional[float] = None,
-                    end_time: Optional[float] = None,
-                    limit: int = 100) -> List[Dict]:
-        """查询审计记录。"""
-        conn = sqlite3.connect(str(self.db_path))
-        conn.row_factory = sqlite3.Row
-        cursor = conn.cursor()
-        sql = "SELECT * FROM audit_log WHERE 1=1"
-        params = []
-        if agent_id:
-            sql += " AND agent_id = ?"
-            params.append(agent_id)
-        if start_time:
-            sql += " AND timestamp >= ?"
-            params.append(start_time)
-        if end_time:
-            sql += " AND timestamp <= ?"
-            params.append(end_time)
-        sql += " ORDER BY timestamp DESC LIMIT ?"
-        params.append(limit)
-
-        cursor.execute(sql, params)
-        rows = cursor.fetchall()
-        conn.close()
-        return [dict(row) for row in rows]
-
-    async def detect_anomalies(self, window_seconds: int = 3600, threshold: int = 100) -> List[Dict]:
+    def __init__(self, storage_backend=None):
         """
-        简单异常检测：统计每个 Agent 在时间窗口内的调用频率。
-        超过 threshold 则标记为异常。
+        初始化审计器。
+
+        Args:
+            storage_backend: 审计记录存储后端，默认为内存，可替换为数据库。
+        """
+        self.storage = storage_backend or []
+        self._lock = asyncio.Lock()
+
+    async def record(self, event: AuditEvent):
+        """记录审计事件。"""
+        async with self._lock:
+            self.storage.append(event)
+        logger.info(f"Audit record: {event.action} on {event.resource} -> {event.decision}")
+
+        # 对于严重事件，立即记录警告
+        if event.severity in (AuditSeverity.CRITICAL, AuditSeverity.ERROR):
+            logger.error(f"Critical audit event: {event.event_id} - {event.reason}")
+
+    async def create_event(
+        self,
+        agent_id: str,
+        action: str,
+        resource: str,
+        decision: str,
+        severity: AuditSeverity = AuditSeverity.INFO,
+        reason: Optional[str] = None,
+        input_data: Optional[Dict[str, Any]] = None,
+        trace_id: Optional[str] = None,
+        metadata: Optional[Dict] = None,
+    ) -> AuditEvent:
+        """创建并记录审计事件。"""
+        # 对输入进行脱敏（仅保留前100字符，防止敏感信息泄露）
+        input_preview = None
+        if input_data:
+            import json
+            preview = json.dumps(input_data)[:100]
+            if len(preview) == 100:
+                preview += "..."
+            input_preview = preview
+
+        event = AuditEvent(
+            event_id=str(uuid.uuid4()),
+            agent_id=agent_id,
+            action=action,
+            resource=resource,
+            decision=decision,
+            severity=severity,
+            reason=reason,
+            input_preview=input_preview,
+            trace_id=trace_id,
+            metadata=metadata or {},
+        )
+        await self.record(event)
+        return event
+
+    async def query(self, agent_id: Optional[str] = None, limit: int = 100) -> List[AuditEvent]:
+        """查询审计记录。"""
+        async with self._lock:
+            events = list(self.storage)
+            if agent_id:
+                events = [e for e in events if e.agent_id == agent_id]
+            return sorted(events, key=lambda e: e.timestamp, reverse=True)[:limit]
+
+    async def detect_anomalies(self, window_seconds: int = 300) -> List[Dict[str, Any]]:
+        """
+        检测异常模式。
+        例如：短时间内高频失败、敏感操作集中等。
         """
         now = time.time()
-        start = now - window_seconds
-        conn = sqlite3.connect(str(self.db_path))
-        cursor = conn.cursor()
-        cursor.execute("""
-            SELECT agent_id, COUNT(*) as cnt
-            FROM audit_log
-            WHERE timestamp >= ?
-            GROUP BY agent_id
-            HAVING cnt > ?
-        """, (start, threshold))
-        rows = cursor.fetchall()
-        conn.close()
-        return [{"agent_id": row[0], "count": row[1]} for row in rows]
+        async with self._lock:
+            recent = [e for e in self.storage if now - e.timestamp < window_seconds]
+
+        anomalies = []
+
+        # 统计每个 Agent 的失败次数
+        failures_by_agent = {}
+        for e in recent:
+            if e.decision == "deny":
+                failures_by_agent[e.agent_id] = failures_by_agent.get(e.agent_id, 0) + 1
+
+        for agent_id, count in failures_by_agent.items():
+            if count > 10:  # 阈值可配置
+                anomalies.append({
+                    "type": "high_failure_rate",
+                    "agent_id": agent_id,
+                    "count": count,
+                    "window": window_seconds,
+                })
+
+        # 检测敏感操作（如删除文件）
+        sensitive_ops = [e for e in recent if "delete" in e.action.lower()]
+        if len(sensitive_ops) > 5:
+            anomalies.append({
+                "type": "excessive_sensitive_ops",
+                "count": len(sensitive_ops),
+                "examples": [e.action for e in sensitive_ops[:3]],
+            })
+
+        return anomalies

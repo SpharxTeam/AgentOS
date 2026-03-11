@@ -41,8 +41,8 @@ class TaskDAG:
     entry_points: List[str] = field(default_factory=list)   # 入度为0的节点
 
     def add_node(self, node: TaskNode):
+        """添加节点到 DAG。"""
         self.nodes[node.task_id] = node
-        # 注意：不自动更新 entry_points，由调用方负责
 
     def get_ready_tasks(self, completed_ids: Set[str]) -> List[TaskNode]:
         """返回依赖已全部完成的可执行任务。"""
@@ -54,17 +54,3 @@ class TaskDAG:
             if deps_met:
                 ready.append(node)
         return ready
-
-    def topological_sort(self) -> List[TaskNode]:
-        """返回拓扑排序的任务列表（若存在环则抛出异常）。"""
-        # 简单实现：Kahn 算法
-        in_degree = {tid: len(node.depends_on) for tid, node in self.nodes.items()}
-        queue = [tid for tid, deg in in_degree.items() if deg == 0]
-        result = []
-        while queue:
-            tid = queue.pop(0)
-            result.append(self.nodes[tid])
-            # 减少依赖该节点的后续节点入度（需构建反向依赖索引，此处简化）
-            # 实际应维护反向边，这里省略，因为本方法可能不常用
-            # 为了完整性，我们直接返回所有节点（不检查环）
-        return result

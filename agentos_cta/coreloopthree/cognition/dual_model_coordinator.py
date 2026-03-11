@@ -3,11 +3,12 @@
 # 负责管理主思考者和辅思考者，实现交叉验证、冲突检测与仲裁。
 
 from typing import Optional, Dict, Any, Tuple, List
-import time
 import asyncio
+import time
+import uuid
 from agentos_cta.utils.structured_logger import get_logger
 from agentos_cta.utils.error_types import ConsensusError, ModelUnavailableError
-from .schemas import Intent, TaskPlan
+from .schemas import Intent, TaskPlan, TaskDAG, TaskNode
 
 logger = get_logger(__name__)
 
@@ -33,15 +34,11 @@ class DualModelCoordinator:
         self._primary_available = True
         self._secondary_available = [True] * len(secondary_models)
 
-        # 模拟的模型调用函数（实际应接入 LLM 客户端）
-        self._model_clients = {}  # 占位
-
     async def _call_model(self, model_name: str, prompt: str) -> Tuple[str, float]:
         """
         模拟调用模型（实际应调用 LLM API）。
         返回 (输出文本, 延迟秒数)
         """
-        # 模拟不同模型的延迟和输出
         await asyncio.sleep(0.5)  # 模拟网络延迟
         if model_name == self.primary_model:
             output = f"[Primary] Processed: {prompt[:50]}..."
@@ -55,18 +52,14 @@ class DualModelCoordinator:
         """
         主入口：使用主模型生成初始规划，同时启动辅模型交叉验证。
         """
-        # 构建 prompt
         prompt = self._build_planning_prompt(intent, context)
 
-        # 主模型调用
         primary_task = asyncio.create_task(self._call_model(self.primary_model, prompt))
-        # 辅模型调用（两个）
         secondary_tasks = [
             asyncio.create_task(self._call_model(m, prompt))
             for m in self.secondary_models
         ]
 
-        # 等待所有完成
         results = await asyncio.gather(primary_task, *secondary_tasks, return_exceptions=True)
 
         primary_output, primary_latency = results[0] if not isinstance(results[0], Exception) else (None, 0)
@@ -79,7 +72,6 @@ class DualModelCoordinator:
             else:
                 secondary_outputs.append(res[0])
 
-        # 交叉验证
         if primary_output is None:
             # 主模型失败，尝试用辅模型接管
             for i, out in enumerate(secondary_outputs):
@@ -97,7 +89,6 @@ class DualModelCoordinator:
             # 触发仲裁：可交由审计委员会或人工介入
             # 这里简单记录并返回主模型输出
 
-        # 将模型输出解析为 TaskPlan（简化）
         plan = self._parse_output_to_plan(primary_output, intent)
         return plan
 
@@ -111,42 +102,41 @@ Context: {context}
 
 The plan should include tasks with dependencies. Output only valid JSON.
 """
-        # 实际应包含更详细的指导
 
     def _check_consensus(self, primary: str, secondaries: List[Optional[str]]) -> Dict[str, Any]:
-        """
-        检查主模型与辅模型输出的一致性。
-        返回包含是否一致及详情。
-        """
-        # 简单比较长度，实际应使用语义相似度
+        """检查主模型与辅模型输出的一致性。"""
         valid_secondaries = [s for s in secondaries if s is not None]
         if not valid_secondaries:
             return {"is_consistent": True, "details": "No secondary outputs"}
 
-        # 如果主输出长度与辅输出平均长度相差太大，认为不一致
         avg_len = sum(len(s) for s in valid_secondaries) / len(valid_secondaries)
         primary_len = len(primary)
         ratio = abs(primary_len - avg_len) / max(avg_len, 1)
-        is_consistent = ratio < 0.5  # 允许50%差异
+        is_consistent = ratio < 0.5
         return {"is_consistent": is_consistent, "details": f"Primary length {primary_len}, avg secondary {avg_len:.1f}"}
 
     def _parse_output_to_plan(self, output: str, intent: Intent) -> TaskPlan:
-        """
-        将模型输出解析为 TaskPlan。
-        简化：返回一个空的计划，实际应解析 JSON。
-        """
-        from .schemas import TaskDAG, TaskPlan
-        import json, time, uuid
+        """将模型输出解析为 TaskPlan。简化实现。"""
+        import json
 
         try:
             data = json.loads(output)
         except:
-            # 解析失败，构造一个默认计划
             data = {"tasks": []}
 
         dag = TaskDAG()
-        # 填充节点...
-        # 此处省略具体解析逻辑，后续可完善
+        # 这里简化处理，实际应根据 data 构建节点
+        # 添加一个模拟节点
+        node = TaskNode(
+            task_id=str(uuid.uuid4()),
+            name="Requirement Analysis",
+            agent_role="product_manager",
+            input_schema={"goal": intent.goal},
+            output_schema={"prd": "string"}
+        )
+        dag.add_node(node)
+        dag.entry_points = [node.task_id]
+
         plan = TaskPlan(
             plan_id=str(uuid.uuid4()),
             dag=dag,

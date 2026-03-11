@@ -1,64 +1,81 @@
 # Copyright (c) 2026 SPHARX. All Rights Reserved. "From data intelligence emerges."
-# WebSocket 网关，支持双向实时通信。
+# WebSocket 网关：支持双向实时通信。
 
 import asyncio
 import json
-from typing import Dict, Any
-import aiohttp
-from aiohttp import web
+from typing import Set, Dict, Any
+import websockets
+from websockets.server import WebSocketServerProtocol
+from .base import Gateway, GatewayConfig
 from agentos_cta.utils.structured_logger import get_logger
-from . import BaseGateway
 
 logger = get_logger(__name__)
 
 
-class WebSocketGateway(BaseGateway):
-    """WebSocket 网关。"""
+class WebSocketGateway(Gateway):
+    """
+    WebSocket 网关。
+    支持双向实时通信，适用于流式响应和多轮对话。
+    """
 
-    def __init__(self, config: Dict[str, Any], request_handler):
-        self.config = config
-        self.handler = request_handler
-        self.host = config.get("host", "127.0.0.1")
-        self.port = config.get("port", 8081)
-        self.app = web.Application()
-        self.runner = None
-        self.site = None
-        self.connections = set()
-
-        self.app.router.add_get("/ws", self._handle_websocket)
-
-    async def _handle_websocket(self, request: web.Request):
-        ws = web.WebSocketResponse()
-        await ws.prepare(request)
-        self.connections.add(ws)
-        logger.info("WebSocket connection opened")
-
-        try:
-            async for msg in ws:
-                if msg.type == aiohttp.WSMsgType.TEXT:
-                    data = json.loads(msg.data)
-                    logger.debug(f"WebSocket received: {data}")
-                    # 处理请求
-                    response = await self.handler("websocket", data)
-                    await ws.send_json(response)
-                elif msg.type == aiohttp.WSMsgType.ERROR:
-                    logger.error(f"WebSocket error: {ws.exception()}")
-        finally:
-            self.connections.remove(ws)
-            logger.info("WebSocket connection closed")
-        return ws
+    def __init__(self, config: GatewayConfig, runtime):
+        super().__init__(config, runtime)
+        self.server = None
+        self.connections: Set[WebSocketServerProtocol] = set()
+        self.session_map: Dict[str, WebSocketServerProtocol] = {}
 
     async def start(self):
-        self.runner = web.AppRunner(self.app)
-        await self.runner.setup()
-        self.site = web.TCPSite(self.runner, self.host, self.port)
-        await self.site.start()
-        logger.info(f"WebSocket gateway started at ws://{self.host}:{self.port}")
+        """启动 WebSocket 服务器。"""
+        self.running = True
+        self.server = await websockets.serve(
+            self._handle_connection,
+            self.config.host,
+            self.config.port,
+            max_size=10 * 1024 * 1024,  # 10MB
+        )
+        logger.info(f"WebSocket gateway listening on ws://{self.config.host}:{self.config.port}")
+        await self.server.wait_closed()
 
     async def stop(self):
+        """停止 WebSocket 服务器。"""
+        self.running = False
         # 关闭所有连接
-        for ws in self.connections.copy():
-            await ws.close()
-        if self.runner:
-            await self.runner.cleanup()
-            logger.info("WebSocket gateway stopped")
+        for conn in list(self.connections):
+            await conn.close()
+        if self.server:
+            self.server.close()
+            await self.server.wait_closed()
+        logger.info("WebSocket gateway stopped")
+
+    async def _handle_connection(self, websocket: WebSocketServerProtocol):
+        """处理新连接。"""
+        self.connections.add(websocket)
+        client_id = f"{websocket.remote_address[0]}:{websocket.remote_address[1]}"
+        logger.info(f"WebSocket client connected: {client_id}")
+
+        try:
+            async for message in websocket:
+                try:
+                    data = json.loads(message)
+                    response = await self.runtime.handle_request(data, "websocket")
+
+                    # 如果是响应式请求，通过 WebSocket 返回
+                    await websocket.send(json.dumps(response))
+
+                except json.JSONDecodeError:
+                    logger.error(f"Invalid JSON from {client_id}")
+                    await websocket.send(json.dumps({
+                        "jsonrpc": "2.0",
+                        "error": {"code": -32700, "message": "Parse error"},
+                    }))
+                except Exception as e:
+                    logger.error(f"WebSocket error: {e}")
+                    await websocket.send(json.dumps({
+                        "jsonrpc": "2.0",
+                        "error": {"code": -32000, "message": str(e)},
+                    }))
+
+        except websockets.exceptions.ConnectionClosed:
+            logger.info(f"WebSocket client disconnected: {client_id}")
+        finally:
+            self.connections.remove(websocket)

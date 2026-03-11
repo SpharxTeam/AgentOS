@@ -64,7 +64,7 @@ class ExecutionUnit(ABC):
                 )
                 return result
             except asyncio.TimeoutError:
-                logger.warning(f"Unit {self.unit_id} timeout (attempt {attempt+1})")
+                logger.warning(f"Unit {self.unit_id} timeout (attempt {attempt+1}/{self.max_retries+1})")
                 if attempt == self.max_retries:
                     raise ToolExecutionError(f"Unit {self.unit_id} timeout after {self.max_retries} retries")
             except Exception as e:

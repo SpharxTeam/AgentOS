@@ -1,71 +1,138 @@
 # Copyright (c) 2026 SPHARX. All Rights Reserved. "From data intelligence emerges."
-# 输入净化器：检测并过滤潜在恶意输入。
+# 输入净化器：检测并过滤潜在恶意输入，防止提示词注入、路径遍历等攻击。
 
 import re
-from typing import Dict, Any, Optional
-from agentos_cta.utils.error_types import SecurityError
+from typing import Any, Dict, Optional, List
+from dataclasses import dataclass
 from agentos_cta.utils.structured_logger import get_logger
+from agentos_cta.utils.error_types import SecurityError
 
 logger = get_logger(__name__)
+
+
+@dataclass
+class SanitizationResult:
+    """净化结果。"""
+    cleaned: Any
+    original: Any
+    was_modified: bool
+    issues: List[str]
+    risk_level: str  # "none", "low", "medium", "high"
 
 
 class InputSanitizer:
     """
     输入净化器。
-    检查输入中是否包含潜在的恶意内容（如提示词注入、路径遍历等）。
+    检测并过滤恶意输入，防止提示词注入、路径遍历、XSS 等攻击。
     """
 
-    # 简单的黑名单模式
-    BLACKLIST_PATTERNS = [
-        r"ignore previous instructions",
-        r"system prompt:",
-        r"you are now",
-        r"\.\./",           # 路径遍历
-        r"`.*`",            # 代码执行
-        r"\${.*}",          # 环境变量注入
-        r"<!--.*-->",       # HTML 注释
-    ]
-
-    def __init__(self, config: Optional[Dict[str, Any]] = None):
+    def __init__(self, config: Optional[Dict] = None):
         self.config = config or {}
-        self.enabled = self.config.get("enabled", True)
-        self.custom_patterns = self.config.get("custom_patterns", [])
-        self.all_patterns = self.BLACKLIST_PATTERNS + self.custom_patterns
+        self.max_length = self.config.get("max_input_length", 100000)
+        self.block_patterns = self.config.get("block_patterns", [
+            r"ignore previous instructions",
+            r"system prompt",
+            r"you are now",
+            r"bypass",
+            r"\.\./",  # 路径遍历
+            r"<script.*?>.*?</script>",  # XSS
+            r"exec\s*\(",  # 命令执行
+        ])
+        self.warn_patterns = self.config.get("warn_patterns", [
+            r"password",
+            r"api[_-]?key",
+            r"secret",
+            r"token",
+        ])
 
-    def sanitize(self, text: str) -> str:
+    def sanitize_string(self, text: str, context: Optional[Dict] = None) -> SanitizationResult:
         """
-        净化输入文本，返回净化后的版本（或抛出异常）。
+        净化单个字符串。
         """
-        if not self.enabled:
-            return text
+        original = text
+        issues = []
+        risk_level = "none"
+        was_modified = False
 
-        # 检查黑名单
-        for pattern in self.all_patterns:
+        # 长度检查
+        if len(text) > self.max_length:
+            text = text[:self.max_length]
+            issues.append(f"Input truncated from {len(original)} to {self.max_length}")
+            was_modified = True
+            risk_level = "low"
+
+        # 检查阻断模式
+        for pattern in self.block_patterns:
             if re.search(pattern, text, re.IGNORECASE):
-                logger.warning(f"Detected suspicious pattern: {pattern}")
-                if self.config.get("strict", True):
-                    raise SecurityError(f"Input contains forbidden pattern: {pattern}")
-                else:
-                    # 替换为安全占位
-                    text = re.sub(pattern, "[FILTERED]", text, flags=re.IGNORECASE)
+                issues.append(f"Blocked pattern detected: {pattern}")
+                risk_level = "high"
+                # 直接拒绝，返回空或抛出异常？这里返回带有 high 风险的结果，由调用方决定是否拒绝
+                # 可以替换为去除匹配部分，但更安全的是标记为高风险
+                # 简单实现：移除匹配部分
+                text = re.sub(pattern, "[REMOVED]", text, flags=re.IGNORECASE)
+                was_modified = True
 
-        # 额外的净化（如去除控制字符）
-        text = ''.join(ch for ch in text if ord(ch) >= 32 or ch in '\n\r\t')
-        return text
+        # 检查警告模式
+        for pattern in self.warn_patterns:
+            if re.search(pattern, text, re.IGNORECASE):
+                issues.append(f"Warning: sensitive pattern '{pattern}' found")
+                if risk_level == "none":
+                    risk_level = "low"
 
-    def sanitize_dict(self, data: Dict[str, Any]) -> Dict[str, Any]:
-        """递归净化字典中的所有字符串值。"""
-        if not self.enabled:
-            return data
+        return SanitizationResult(
+            cleaned=text,
+            original=original,
+            was_modified=was_modified,
+            issues=issues,
+            risk_level=risk_level,
+        )
 
-        result = {}
+    def sanitize_dict(self, data: Dict[str, Any], context: Optional[Dict] = None) -> Dict[str, Any]:
+        """
+        净化字典中的所有字符串字段。
+        """
+        cleaned = {}
         for key, value in data.items():
             if isinstance(value, str):
-                result[key] = self.sanitize(value)
+                result = self.sanitize_string(value, context)
+                cleaned[key] = result.cleaned
+                if result.risk_level == "high":
+                    # 高风险，记录并可能拒绝
+                    logger.warning(f"High risk input in key '{key}': {result.issues}")
+                    # 可选：抛出异常
+                    # raise SecurityError(f"High risk input detected: {result.issues}")
             elif isinstance(value, dict):
-                result[key] = self.sanitize_dict(value)
+                cleaned[key] = self.sanitize_dict(value, context)
             elif isinstance(value, list):
-                result[key] = [self.sanitize(item) if isinstance(item, str) else item for item in value]
+                cleaned[key] = [self.sanitize_dict(item, context) if isinstance(item, dict) else item for item in value]
             else:
-                result[key] = value
-        return result
+                cleaned[key] = value
+        return cleaned
+
+    def sanitize(self, data: Any, context: Optional[Dict] = None) -> SanitizationResult:
+        """
+        通用净化接口。
+        """
+        if isinstance(data, str):
+            return self.sanitize_string(data, context)
+        elif isinstance(data, dict):
+            cleaned_dict = self.sanitize_dict(data, context)
+            # 计算是否有修改和风险
+            was_modified = cleaned_dict != data
+            issues = []  # 简化为无 issues 列表
+            risk_level = "none"  # 简化
+            return SanitizationResult(
+                cleaned=cleaned_dict,
+                original=data,
+                was_modified=was_modified,
+                issues=issues,
+                risk_level=risk_level,
+            )
+        else:
+            return SanitizationResult(
+                cleaned=data,
+                original=data,
+                was_modified=False,
+                issues=[],
+                risk_level="none",
+            )

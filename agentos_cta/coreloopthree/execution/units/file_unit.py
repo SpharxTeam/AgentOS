@@ -21,16 +21,13 @@ class FileUnit(ExecutionUnit):
         # 安全检查：防止路径遍历
         path = input_data.get("path")
         if path:
-            # 简单防护：拒绝包含 .. 的路径
             if ".." in path:
                 raise SecurityError("Path traversal attempt detected")
-            # 确保操作在允许的根目录内（可由配置指定）
             allowed_root = self.config.get("allowed_root", "/tmp/agentos")
             full_path = os.path.abspath(os.path.join(allowed_root, path))
             if not full_path.startswith(os.path.abspath(allowed_root)):
                 raise SecurityError(f"Access to {full_path} denied")
 
-        # 根据操作分发
         if operation == "read":
             return await self._read(input_data)
         elif operation == "write":
@@ -58,7 +55,6 @@ class FileUnit(ExecutionUnit):
         encoding = input_data.get("encoding", "utf-8")
         mode = input_data.get("mode", "w")
         try:
-            # 确保目录存在
             Path(path).parent.mkdir(parents=True, exist_ok=True)
             async with aiofiles.open(path, mode, encoding=encoding) as f:
                 await f.write(content)
@@ -107,6 +103,5 @@ class FileUnit(ExecutionUnit):
         }
 
     def is_idempotent(self) -> bool:
-        # 读操作幂等，写/删除一般不是
         op = self.config.get("default_operation", "read")
         return op in ["read", "list"]

@@ -28,7 +28,6 @@ class IncrementalPlanner:
         plan_id = str(uuid.uuid4())
         dag = TaskDAG()
 
-        # 模拟第一阶段任务：需求分析
         task1 = TaskNode(
             task_id=str(uuid.uuid4()),
             name="Requirement Analysis",
@@ -56,7 +55,6 @@ class IncrementalPlanner:
         根据已完成任务和反馈，扩展后续阶段。
         返回更新后的计划。
         """
-        # 模拟：添加一个新任务
         new_task = TaskNode(
             task_id=str(uuid.uuid4()),
             name="System Design",
@@ -74,13 +72,11 @@ class IncrementalPlanner:
         """
         根据失败任务修订计划（回退或替换）。
         """
-        # 简单实现：将失败任务标记为失败，并添加一个备选任务
         if failed_task_id in plan.dag.nodes:
             node = plan.dag.nodes[failed_task_id]
             node.status = TaskStatus.FAILED
             node.error = reason
 
-            # 添加一个备选任务（例如由其他角色重试）
             alt_task = TaskNode(
                 task_id=str(uuid.uuid4()),
                 name=f"{node.name} (retry)",

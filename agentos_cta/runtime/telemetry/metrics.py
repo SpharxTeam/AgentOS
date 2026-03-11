@@ -1,51 +1,63 @@
 # Copyright (c) 2026 SPHARX. All Rights Reserved. "From data intelligence emerges."
-# 指标收集器（基于 Prometheus 客户端）。
+# 指标收集器。
 
-from prometheus_client import Counter, Histogram, Gauge, generate_latest
-from typing import Dict, Any, Optional
 import time
+from collections import defaultdict
+from typing import Dict, List
+from dataclasses import dataclass, field
+
+
+@dataclass
+class MetricPoint:
+    """指标数据点。"""
+    timestamp: float
+    value: float
 
 
 class MetricsCollector:
     """
-    指标收集器，封装 Prometheus 指标。
+    指标收集器。
+    支持计数器、定时器等基础指标类型。
     """
 
-    def __init__(self, namespace: str = "agentos"):
-        self.namespace = namespace
-        # 定义常用指标
-        self.request_count = Counter(
-            name=f"{namespace}_requests_total",
-            documentation="Total requests",
-            labelnames=["gateway", "method", "status"]
-        )
-        self.request_duration = Histogram(
-            name=f"{namespace}_request_duration_seconds",
-            documentation="Request duration in seconds",
-            labelnames=["gateway", "method"],
-            buckets=(0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1, 2.5, 5, 10)
-        )
-        self.active_sessions = Gauge(
-            name=f"{namespace}_active_sessions",
-            documentation="Number of active sessions"
-        )
-        self.token_usage = Counter(
-            name=f"{namespace}_token_usage_total",
-            documentation="Total token usage",
-            labelnames=["model", "type"]  # type: input/output
-        )
+    def __init__(self):
+        self._counters: Dict[str, int] = defaultdict(int)
+        self._timings: Dict[str, List[MetricPoint]] = defaultdict(list)
+        self._gauges: Dict[str, float] = {}
 
-    def record_request(self, gateway: str, method: str, status: str, duration: float):
-        """记录请求。"""
-        self.request_count.labels(gateway=gateway, method=method, status=status).inc()
-        self.request_duration.labels(gateway=gateway, method=method).observe(duration)
+    def increment(self, name: str, value: int = 1):
+        """增加计数器。"""
+        self._counters[name] += value
 
-    def set_active_sessions(self, count: int):
-        self.active_sessions.set(count)
+    def record_timing(self, name: str, duration_ms: float):
+        """记录耗时。"""
+        self._timings[name].append(MetricPoint(
+            timestamp=time.time(),
+            value=duration_ms,
+        ))
 
-    def record_tokens(self, model: str, token_type: str, count: int):
-        self.token_usage.labels(model=model, type=token_type).inc(count)
+    def set_gauge(self, name: str, value: float):
+        """设置仪表值。"""
+        self._gauges[name] = value
 
-    def export(self) -> bytes:
-        """返回 Prometheus 格式的指标数据。"""
-        return generate_latest()
+    def collect(self) -> Dict[str, Any]:
+        """收集所有指标。"""
+        result = {
+            "counters": dict(self._counters),
+            "gauges": dict(self._gauges),
+        }
+
+        # 计算耗时统计
+        timings_summary = {}
+        for name, points in self._timings.items():
+            if points:
+                values = [p.value for p in points]
+                timings_summary[name] = {
+                    "count": len(values),
+                    "avg": sum(values) / len(values),
+                    "min": min(values),
+                    "max": max(values),
+                }
+        result["timings"] = timings_summary
+
+        return result

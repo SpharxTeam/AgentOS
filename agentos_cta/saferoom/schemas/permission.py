@@ -1,22 +1,37 @@
 # Copyright (c) 2026 SPHARX. All Rights Reserved. "From data intelligence emerges."
-# 权限数据模型。
+# 权限相关数据模型。
 
-from dataclasses import dataclass
-from typing import Optional
 from enum import Enum
+from typing import Optional, List, Dict, Any
+from dataclasses import dataclass, field
+import re
 
 
-class PermissionAction(str, Enum):
+class PermissionEffect(str, Enum):
+    """权限效果。"""
     ALLOW = "allow"
     DENY = "deny"
-    PROMPT = "prompt"  # 需要用户确认
+    ALLOW_WITH_AUDIT = "allow_with_audit"  # 允许但需审计
 
 
 @dataclass
-class Permission:
-    """权限实体。"""
-    resource: str          # 资源标识，如 "file:/tmp/xxx"
-    action: str            # 操作，如 "read", "write", "execute"
-    effect: PermissionAction
-    reason: Optional[str] = None
-    ttl_seconds: Optional[int] = None  # 有效期（临时授权）
+class ResourcePattern:
+    """资源模式定义。"""
+    pattern: str  # 如 "file:read:/tmp/*"
+    
+    def match(self, resource: str) -> bool:
+        """检查资源是否匹配模式。"""
+        # 将模式转换为正则表达式
+        regex = self.pattern.replace(".", "\\.").replace("*", ".*").replace("?", ".")
+        return re.match(regex, resource) is not None
+
+
+@dataclass
+class PermissionRule:
+    """权限规则。"""
+    rule_id: str
+    resource_pattern: ResourcePattern
+    action: str  # read, write, execute, connect 等
+    effect: PermissionEffect
+    priority: int = 0  # 数字越大优先级越高
+    conditions: Optional[Dict[str, Any]] = None  # 附加条件

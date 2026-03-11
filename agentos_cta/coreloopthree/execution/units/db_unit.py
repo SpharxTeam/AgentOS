@@ -36,5 +36,4 @@ class DBUnit(ExecutionUnit):
         }
 
     def is_idempotent(self) -> bool:
-        # 根据查询类型判断，简化返回 False
         return False

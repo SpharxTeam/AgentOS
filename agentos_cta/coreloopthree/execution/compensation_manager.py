@@ -31,7 +31,13 @@ class CompensationManager:
     """
 
     def __init__(self, unit_pool):
-        self.unit_pool = unit_pool  # 用于获取补偿单元
+        """
+        初始化补偿管理器。
+
+        Args:
+            unit_pool: 执行单元池，用于获取补偿单元。
+        """
+        self.unit_pool = unit_pool
         self.actions: Dict[str, CompensableAction] = {}
         self._lock = asyncio.Lock()
         self.human_intervention_queue: List[Dict] = []  # 人工介入队列
@@ -67,7 +73,6 @@ class CompensationManager:
         if action.compensator_id:
             try:
                 unit = await self.unit_pool.get_unit(action.compensator_id)
-                # 构造补偿输入（通常基于原输入和结果）
                 comp_input = {
                     "original_input": action.input_data,
                     "original_result": action.result
@@ -82,11 +87,9 @@ class CompensationManager:
                 async with self._lock:
                     action.compensation_error = str(e)
                 logger.error(f"Compensation failed for {action_id}: {e}")
-                # 失败时加入人工队列
                 await self.add_to_human_queue(action_id, reason=f"Compensation failed: {e}")
                 return False
         else:
-            # 没有补偿单元，标记为需要人工介入
             await self.add_to_human_queue(action_id, reason="No compensator defined")
             return False
 

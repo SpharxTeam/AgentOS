@@ -1,58 +1,118 @@
 # Copyright (c) 2026 SPHARX. All Rights Reserved. "From data intelligence emerges."
-# HTTP 网关，提供 RESTful API 和 SSE 支持。
+# HTTP 网关：基于 FastAPI 实现。
 
-from typing import Dict, Any, Optional
 import asyncio
-from aiohttp import web
+import json
+from typing import Dict, Any
+import uvicorn
+from fastapi import FastAPI, Request, Response
+from fastapi.middleware.cors import CORSMiddleware
+import httpx
+from .base import Gateway, GatewayConfig
 from agentos_cta.utils.structured_logger import get_logger
-from . import BaseGateway
 
 logger = get_logger(__name__)
 
 
-class HTTPGateway(BaseGateway):
-    """HTTP 网关，基于 aiohttp。"""
+class HttpGateway(Gateway):
+    """
+    HTTP 网关。
+    基于 FastAPI 实现，提供 RESTful 接口。
+    借鉴 Agno AgentOS 的 FastAPI 集成设计 [citation:4]。
+    """
 
-    def __init__(self, config: Dict[str, Any], request_handler):
-        """
-        Args:
-            config: 配置，如 host, port
-            request_handler: 异步函数，接收 (gateway_name, request_dict) 返回响应字典
-        """
-        self.config = config
-        self.handler = request_handler
-        self.host = config.get("host", "127.0.0.1")
-        self.port = config.get("port", 8080)
-        self.app = web.Application()
-        self.runner = None
-        self.site = None
+    def __init__(self, config: GatewayConfig, runtime):
+        super().__init__(config, runtime)
+        self.app = FastAPI(title="AgentOS Runtime API")
+        self.server = None
+        self._setup_routes()
+        self._setup_middleware()
 
-        # 注册路由
-        self.app.router.add_post("/api/v1/process", self._handle_post)
-        self.app.router.add_get("/health", self._handle_health)
+    def _setup_middleware(self):
+        """设置中间件。"""
+        self.app.add_middleware(
+            CORSMiddleware,
+            allow_origins=["*"],
+            allow_credentials=True,
+            allow_methods=["*"],
+            allow_headers=["*"],
+        )
 
-    async def _handle_post(self, request: web.Request) -> web.Response:
-        """处理 POST /api/v1/process"""
-        try:
-            body = await request.json()
-            logger.debug(f"HTTP request: {body}")
-            response = await self.handler("http", body)
-            return web.json_response(response)
-        except Exception as e:
-            logger.error(f"HTTP error: {e}")
-            return web.json_response({"error": str(e)}, status=500)
+    def _setup_routes(self):
+        """设置路由。"""
 
-    async def _handle_health(self, request: web.Request) -> web.Response:
-        return web.json_response({"status": "ok"})
+        @self.app.get("/health")
+        async def health():
+            result = await self.runtime.health_checker.check()
+            return result.to_dict()
+
+        @self.app.post("/api/v1/rpc")
+        async def rpc_endpoint(request: Request):
+            body = await request.body()
+            try:
+                data = json.loads(body) if body else {}
+                response = await self.runtime.handle_request(data, "http")
+                return Response(
+                    content=json.dumps(response),
+                    media_type="application/json",
+                )
+            except Exception as e:
+                logger.error(f"HTTP request failed: {e}")
+                return Response(
+                    content=json.dumps({
+                        "jsonrpc": "2.0",
+                        "error": {
+                            "code": -32603,
+                            "message": str(e),
+                        },
+                        "id": data.get("id") if 'data' in locals() else None,
+                    }),
+                    media_type="application/json",
+                    status_code=500,
+                )
+
+        @self.app.get("/api/v1/sessions")
+        async def list_sessions():
+            sessions = await self.runtime.session_manager.list_sessions()
+            return {"sessions": [s.to_dict() for s in sessions]}
+
+        @self.app.get("/api/v1/sessions/{session_id}")
+        async def get_session(session_id: str):
+            session = await self.runtime.session_manager.get_session(session_id)
+            if not session:
+                return Response(
+                    content=json.dumps({"error": "Session not found"}),
+                    status_code=404,
+                )
+            return session.to_dict()
+
+        @self.app.delete("/api/v1/sessions/{session_id}")
+        async def close_session(session_id: str):
+            success = await self.runtime.session_manager.close_session(session_id)
+            if not success:
+                return Response(
+                    content=json.dumps({"error": "Session not found"}),
+                    status_code=404,
+                )
+            return {"success": True}
 
     async def start(self):
-        self.runner = web.AppRunner(self.app)
-        await self.runner.setup()
-        self.site = web.TCPSite(self.runner, self.host, self.port)
-        await self.site.start()
-        logger.info(f"HTTP gateway started at http://{self.host}:{self.port}")
+        """启动 HTTP 服务器。"""
+        self.running = True
+        config = uvicorn.Config(
+            self.app,
+            host=self.config.host,
+            port=self.config.port,
+            log_level="info",
+        )
+        self.server = uvicorn.Server(config)
+        logger.info(f"HTTP gateway listening on {self.config.host}:{self.config.port}")
+        await self.server.serve()
 
     async def stop(self):
-        if self.runner:
-            await self.runner.cleanup()
+        """停止 HTTP 服务器。"""
+        self.running = False
+        if self.server:
+            self.server.should_exit = True
+            await self.server.shutdown()
             logger.info("HTTP gateway stopped")

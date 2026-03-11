@@ -7,13 +7,18 @@ from agentos_cta.utils.error_types import ToolExecutionError
 
 
 class BrowserUnit(ExecutionUnit):
-    """浏览器自动化单元（简化占位）。"""
+    """浏览器自动化单元（简化占位，实际应集成 Playwright）。"""
 
     async def execute(self, input_data: Dict[str, Any]) -> Dict[str, Any]:
-        # 此处应集成 Playwright/Selenium，但为简化，返回模拟结果
         action = input_data.get("action")
+        if not action:
+            raise ToolExecutionError("No action specified")
+
         if action == "navigate":
             url = input_data.get("url")
+            if not url:
+                raise ToolExecutionError("URL required for navigate")
+            # 模拟导航
             return {"status": "navigated", "url": url, "title": "Example Domain"}
         elif action == "click":
             selector = input_data.get("selector")

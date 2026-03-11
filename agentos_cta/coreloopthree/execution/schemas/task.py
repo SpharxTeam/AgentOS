@@ -1,12 +1,13 @@
 # Copyright (c) 2026 SPHARX. All Rights Reserved. "From data intelligence emerges."
 # 任务数据模型。
 
-from typing import Dict, Any, Optional, List
+from typing import Dict, Any, Optional
 from dataclasses import dataclass, field
 from enum import Enum
 
 
 class TaskStatus(str, Enum):
+    """任务状态枚举。"""
     PENDING = "pending"
     ASSIGNED = "assigned"
     RUNNING = "running"

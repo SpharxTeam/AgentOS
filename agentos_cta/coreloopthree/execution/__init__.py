@@ -1,5 +1,5 @@
 # Copyright (c) 2026 SPHARX. All Rights Reserved. "From data intelligence emerges."
-# AgentOS CoreLoopThree 行动层核心模块。
+# AgentOS CoreLoopThree 行动层模块。
 # 提供 Agent 池、执行单元、补偿事务、责任链追踪等组件。
 
 from .agent_pool import AgentPool

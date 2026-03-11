@@ -1,9 +1,9 @@
 # Copyright (c) 2026 SPHARX. All Rights Reserved. "From data intelligence emerges."
-# 任务规划相关数据模型（依赖 task_graph 中的基础类）。
+# 任务规划相关数据模型。
 
 from typing import Dict, Any
 from dataclasses import dataclass, field
-from .task_graph import TaskDAG  # 从新文件导入
+from .task_graph import TaskDAG
 
 
 @dataclass

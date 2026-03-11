@@ -1,9 +1,8 @@
 # Copyright (c) 2026 SPHARX. All Rights Reserved. "From data intelligence emerges."
-# AgentOS CoreLoopThree 核心层。
-# 包含认知层、行动层、记忆与进化层的所有核心组件。
+# AgentOS CoreLoopThree 核心层入口。
+# 导出认知层、行动层、记忆层所有核心组件。
 
-# 认知层
-from agentos_cta.coreloopthreeloopthreeloopthree.cognition import (
+from .cognition import (
     Router,
     DualModelCoordinator,
     IncrementalPlanner,
@@ -14,10 +13,9 @@ from agentos_cta.coreloopthreeloopthreeloopthree.cognition import (
     TaskPlan,
     TaskNode,
     TaskDAG,
+    TaskStatus,
 )
-
-# 行动层
-from agentos_cta.coreloopthreeloopthreeloopthree.execution import (
+from .execution import (
     AgentPool,
     ExecutionUnit,
     ToolUnit,
@@ -29,35 +27,52 @@ from agentos_cta.coreloopthreeloopthreeloopthree.execution import (
     CompensationManager,
     TraceabilityTracer,
     Task,
-    TaskStatus,
     Result,
 )
-
-# 记忆与进化层
-from agentos_cta.coreloopthreeloopthreeloopthree.memory_evolution import (
-    # deep_memory
-    Buffer,
-    Summarizer,
-    VectorStore,
-    PatternMiner,
-    # world_model
-    SemanticSlicer,
-    TemporalAligner,
-    DriftDetector,
-    # consensus
-    QuorumFast,
-    StabilityWindow,
-    StreamingConsensus,
+from .memories import (
     # committees
     CoordinationCommittee,
     TechnicalCommittee,
     AuditCommittee,
     TeamCommittee,
-    # shared_memory
-    SharedMemory,
+    # consensus
+    QuorumFast,
+    StabilityWindow,
+    StreamingConsensus,
+    # memoryrovol
+    RawStorage,
+    Serializer,
+    MetadataManager,
+    Embedder,
+    VectorIndex,
+    SimilarityCalculator,
+    Binder,
+    Unbinder,
+    RelationEncoder,
+    PatternMiner,
+    PersistenceCalculator,
+    RuleGenerator,
+    AttractorNetwork,
+    EnergyFunction,
+    Mounter,
+    DecayFunction,
+    Pruner,
+    MemoryRovolConfig,
     # schemas
     MemoryRecord,
+    MemoryMetadata,
+    MemoryQuery,
+    Pattern,
     EvolutionReport,
+    # shared
+    SharedMemory,
+    CentralBoard,
+    AgentRegistry,
+    ProjectContext,
+    # world_model
+    SemanticSlicer,
+    TemporalAligner,
+    DriftDetector,
 )
 
 __all__ = [
@@ -72,6 +87,7 @@ __all__ = [
     "TaskPlan",
     "TaskNode",
     "TaskDAG",
+    "TaskStatus",
     # execution
     "AgentPool",
     "ExecutionUnit",
@@ -84,24 +100,43 @@ __all__ = [
     "CompensationManager",
     "TraceabilityTracer",
     "Task",
-    "TaskStatus",
     "Result",
-    # memory_evolution
-    "Buffer",
-    "Summarizer",
-    "VectorStore",
-    "PatternMiner",
-    "SemanticSlicer",
-    "TemporalAligner",
-    "DriftDetector",
-    "QuorumFast",
-    "StabilityWindow",
-    "StreamingConsensus",
+    # memories (全部)
     "CoordinationCommittee",
     "TechnicalCommittee",
     "AuditCommittee",
     "TeamCommittee",
-    "SharedMemory",
+    "QuorumFast",
+    "StabilityWindow",
+    "StreamingConsensus",
+    "RawStorage",
+    "Serializer",
+    "MetadataManager",
+    "Embedder",
+    "VectorIndex",
+    "SimilarityCalculator",
+    "Binder",
+    "Unbinder",
+    "RelationEncoder",
+    "PatternMiner",
+    "PersistenceCalculator",
+    "RuleGenerator",
+    "AttractorNetwork",
+    "EnergyFunction",
+    "Mounter",
+    "DecayFunction",
+    "Pruner",
+    "MemoryRovolConfig",
     "MemoryRecord",
+    "MemoryMetadata",
+    "MemoryQuery",
+    "Pattern",
     "EvolutionReport",
+    "SharedMemory",
+    "CentralBoard",
+    "AgentRegistry",
+    "ProjectContext",
+    "SemanticSlicer",
+    "TemporalAligner",
+    "DriftDetector",
 ]

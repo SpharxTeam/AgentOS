@@ -4,8 +4,4 @@
 from .task import Task, TaskStatus
 from .result import Result
 
-__all__ = [
-    "Task",
-    "TaskStatus",
-    "Result",
-]
+__all__ = ["Task", "TaskStatus", "Result"]

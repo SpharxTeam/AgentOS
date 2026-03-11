@@ -5,8 +5,6 @@
 from typing import Dict, Any
 from .base_unit import ExecutionUnit
 from agentos_cta.utils.error_types import ToolExecutionError
-import asyncio
-import subprocess
 
 
 class ToolUnit(ExecutionUnit):

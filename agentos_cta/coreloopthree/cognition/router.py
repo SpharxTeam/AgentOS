@@ -33,9 +33,7 @@ class Router:
         解析用户原始输入，生成结构化 Intent。
         当前实现简单基于规则，后续可替换为 NLU 模型。
         """
-        # 简单规则：根据长度和关键词判断复杂度
         text_lower = raw_text.lower()
-        # 检测是否是简单任务（例如：一句话、无复杂要求）
         simple_keywords = ['hello', 'hi', 'help', 'status']
         complex_keywords = ['develop', 'create', 'build', 'design', 'analyze', 'multiple', 'steps']
 
@@ -68,10 +66,8 @@ class Router:
         返回 ResourceMatch 包含模型名称和 Token 预算。
         """
         complexity = intent.complexity
-
-        # 从模型列表中选取合适模型（假设模型已按性能排序）
-        # 简单起见，我们选取第一个匹配的模型
         selected_model = None
+
         if complexity == ComplexityLevel.SIMPLE:
             # 选取轻量模型（如 gpt-3.5-turbo）
             for m in self.models:
@@ -79,7 +75,7 @@ class Router:
                     selected_model = m
                     break
             if not selected_model and self.models:
-                selected_model = self.models[0]  # 默认第一个
+                selected_model = self.models[0]
         else:  # COMPLEX or CRITICAL
             # 选取最强模型（如 gpt-4 或 claude-3-opus）
             for m in self.models:
@@ -87,10 +83,10 @@ class Router:
                     selected_model = m
                     break
             if not selected_model and self.models:
-                selected_model = self.models[-1]  # 默认最后一个
+                selected_model = self.models[-1]
 
         if not selected_model:
-            raise ConfigurationError("No suitable model found for complexity {}".format(complexity))
+            raise ConfigurationError(f"No suitable model found for complexity {complexity}")
 
         model_name = selected_model['name']
         # 预估 token（简单估算，实际应调用 token_counter）
