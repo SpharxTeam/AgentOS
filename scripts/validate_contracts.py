@@ -9,11 +9,11 @@ from pathlib import Path
 # 添加项目根目录到路径
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from agentos_cta.agents.contracts import validate_contract_file, ContractValidationError
+from agentos_open.markets.agent.builtin.contracts import validate_contract_file, ContractValidationError
 
 def main():
     root = Path(__file__).parent.parent
-    builtin_agents_dir = root / "src/agentos_cta/agents/builtin"
+    builtin_agents_dir = root / "agentos_open/markets/agent/builtin"
 
     if not builtin_agents_dir.exists():
         print(f"Builtin agents directory not found: {builtin_agents_dir}")
