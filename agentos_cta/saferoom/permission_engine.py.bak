@@ -5,8 +5,8 @@
 from typing import List, Dict, Any, Optional
 from dataclasses import dataclass
 import fnmatch
-from agentos_cta.utils.observability import get_logger
-from agentos_cta.utils.error import SecurityError
+from agentos_cta.utils.structured_logger import get_logger
+from agentos_cta.utils.error_types import SecurityError
 from .schemas import PermissionRule, PermissionEffect, ResourcePattern
 
 logger = get_logger(__name__)

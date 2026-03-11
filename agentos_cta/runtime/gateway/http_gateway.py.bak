@@ -9,7 +9,7 @@ from fastapi import FastAPI, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 import httpx
 from .base import Gateway, GatewayConfig
-from agentos_cta.utils.observability import get_logger
+from agentos_cta.utils.structured_logger import get_logger
 
 logger = get_logger(__name__)
 

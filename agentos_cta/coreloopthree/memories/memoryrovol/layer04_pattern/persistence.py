@@ -4,8 +4,8 @@
 import numpy as np
 from typing import List, Tuple, Optional, Dict, Any
 import asyncio
-from agentos_cta.utils.structured_logger import get_logger
-from agentos_cta.utils.error_types import AgentOSError
+from agentos_cta.utils.observability import get_logger
+from agentos_cta.utils.error import AgentOSError
 
 logger = get_logger(__name__)
 

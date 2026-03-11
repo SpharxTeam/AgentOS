@@ -5,7 +5,7 @@ import asyncio
 import time
 from typing import Any, List, Optional
 from collections import deque
-from agentos_cta.utils.structured_logger import get_logger
+from agentos_cta.utils.observability import get_logger
 
 logger = get_logger(__name__)
 

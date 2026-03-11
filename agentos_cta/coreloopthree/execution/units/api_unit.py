@@ -5,7 +5,7 @@ import aiohttp
 import asyncio
 from typing import Dict, Any
 from .base_unit import ExecutionUnit
-from agentos_cta.utils.error_types import ToolExecutionError
+from agentos_cta.utils.error import ToolExecutionError
 
 
 class APIUnit(ExecutionUnit):

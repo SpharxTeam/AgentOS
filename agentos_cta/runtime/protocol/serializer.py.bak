@@ -4,7 +4,7 @@
 import json
 import pickle
 from typing import Any, Optional
-from agentos_cta.utils.error import AgentOSError
+from agentos_cta.utils.error_types import AgentOSError
 
 
 class MessageSerializer:

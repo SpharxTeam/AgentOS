@@ -5,7 +5,7 @@ import uuid
 import time
 from typing import Dict, Any, Optional, List
 from dataclasses import dataclass, field
-from agentos_cta.utils.structured_logger import get_logger, set_trace_id, get_trace_id
+from agentos_cta.utils.observability import get_logger, set_trace_id, get_trace_id
 
 logger = get_logger(__name__)
 

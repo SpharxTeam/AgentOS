@@ -4,7 +4,7 @@
 import numpy as np
 import time
 from typing import Optional, Dict, Any
-from agentos_cta.utils.structured_logger import get_logger
+from agentos_cta.utils.observability import get_logger
 
 logger = get_logger(__name__)
 

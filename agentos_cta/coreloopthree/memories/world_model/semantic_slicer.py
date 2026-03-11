@@ -6,8 +6,8 @@ import hashlib
 import numpy as np
 from typing import List, Dict, Any, Optional, Tuple
 from dataclasses import dataclass, field
-from agentos_cta.utils.structured_logger import get_logger
-from agentos_cta.utils.token_counter import TokenCounter
+from agentos_cta.utils.observability import get_logger
+from agentos_cta.utils.token import TokenCounter
 
 logger = get_logger(__name__)
 

@@ -3,7 +3,7 @@
 
 from typing import Dict, Any, List, Optional, Tuple
 import numpy as np
-from agentos_cta.utils.structured_logger import get_logger
+from agentos_cta.utils.observability import get_logger
 from .binder import Binder
 from .unbinder import Unbinder
 

@@ -3,8 +3,8 @@
 
 from typing import Optional, Dict, Any
 import re
-from agentos_cta.utils.structured_logger import get_logger
-from agentos_cta.utils.error_types import ConfigurationError
+from agentos_cta.utils.observability import get_logger
+from agentos_cta.utils.error import ConfigurationError
 from .schemas import Intent, ComplexityLevel, ResourceMatch
 
 logger = get_logger(__name__)

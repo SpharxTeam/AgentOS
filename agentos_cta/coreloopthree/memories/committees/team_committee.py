@@ -7,9 +7,9 @@ import time
 import json
 from pathlib import Path
 from dataclasses import dataclass, field
-from agentos_cta.utils.structured_logger import get_logger
-from agentos_cta.utils.error_types import AgentOSError
-from agentos_cta.utils.file_utils import FileUtils
+from agentos_cta.utils.observability import get_logger
+from agentos_cta.utils.error import AgentOSError
+from agentos_cta.utils.io.file_utils import FileUtils
 
 logger = get_logger(__name__)
 

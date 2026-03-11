@@ -6,8 +6,8 @@ import asyncio
 import time
 from typing import AsyncGenerator, Any, Optional, Dict
 from dataclasses import dataclass
-from agentos_cta.utils.structured_logger import get_logger
-from agentos_cta.utils.error_types import ConsensusError
+from agentos_cta.utils.observability import get_logger
+from agentos_cta.utils.error import ConsensusError
 
 logger = get_logger(__name__)
 

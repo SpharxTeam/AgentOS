@@ -3,7 +3,7 @@
 
 import time
 from typing import Dict, Any, Optional
-from agentos_cta.utils.observability import get_logger
+from agentos_cta.utils.structured_logger import get_logger
 from .metrics import MetricsCollector
 from .trace import TraceCollector
 from .exporter import OtlpExporter

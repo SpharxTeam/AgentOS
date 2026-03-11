@@ -3,9 +3,9 @@
 
 from typing import List, Dict, Any, Optional, Tuple
 import asyncio
-from agentos_cta.utils.structured_logger import get_logger
-from agentos_cta.utils.token_counter import TokenCounter
-from agentos_cta.utils.error_types import ResourceLimitError
+from agentos_cta.utils.observability import get_logger
+from agentos_cta.utils.token import TokenCounter
+from agentos_cta.utils.error import ResourceLimitError
 
 logger = get_logger(__name__)
 

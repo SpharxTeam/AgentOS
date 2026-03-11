@@ -5,8 +5,8 @@ from typing import Dict, Any, List, Optional
 import asyncio
 import time
 from dataclasses import dataclass, field
-from agentos_cta.utils.structured_logger import get_logger
-from agentos_cta.utils.error_types import AgentOSError
+from agentos_cta.utils.observability import get_logger
+from agentos_cta.utils.error import AgentOSError
 
 logger = get_logger(__name__)
 

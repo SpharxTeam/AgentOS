@@ -6,8 +6,8 @@ import signal
 from typing import Dict, Any, Optional, List
 from dataclasses import dataclass, field
 import uvloop
-from agentos_cta.utils.observability import get_logger, set_trace_id
-from agentos_cta.utils.error import AgentOSError
+from agentos_cta.utils.structured_logger import get_logger, set_trace_id
+from agentos_cta.utils.error_types import AgentOSError
 from .session_manager import SessionManager
 from .gateway import HttpGateway, WebSocketGateway, StdioGateway, GatewayConfig
 from .telemetry import TelemetryCollector

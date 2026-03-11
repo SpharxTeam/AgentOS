@@ -4,7 +4,7 @@
 import json
 from typing import Dict, Any, Optional, Union
 from dataclasses import dataclass
-from agentos_cta.utils.error import AgentOSError
+from agentos_cta.utils.error_types import AgentOSError
 
 
 @dataclass

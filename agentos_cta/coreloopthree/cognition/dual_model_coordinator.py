@@ -6,8 +6,8 @@ from typing import Optional, Dict, Any, Tuple, List
 import asyncio
 import time
 import uuid
-from agentos_cta.utils.structured_logger import get_logger
-from agentos_cta.utils.error_types import ConsensusError, ModelUnavailableError
+from agentos_cta.utils.observability import get_logger
+from agentos_cta.utils.error import ConsensusError, ModelUnavailableError
 from .schemas import Intent, TaskPlan, TaskDAG, TaskNode
 
 logger = get_logger(__name__)

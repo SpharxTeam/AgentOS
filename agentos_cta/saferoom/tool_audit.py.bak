@@ -5,8 +5,8 @@ import asyncio
 import time
 import uuid
 from typing import Dict, Any, Optional, List
-from agentos_cta.utils.observability import get_logger
-from agentos_cta.utils.error import SecurityError
+from agentos_cta.utils.structured_logger import get_logger
+from agentos_cta.utils.error_types import SecurityError
 from .schemas import AuditEvent, AuditSeverity
 
 logger = get_logger(__name__)

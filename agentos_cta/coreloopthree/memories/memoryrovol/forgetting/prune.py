@@ -4,8 +4,8 @@
 from typing import List, Dict, Any, Optional
 import asyncio
 import time
-from agentos_cta.utils.structured_logger import get_logger
-from agentos_cta.utils.file_utils import FileUtils
+from agentos_cta.utils.observability import get_logger
+from agentos_cta.utils.io.file_utils import FileUtils
 
 logger = get_logger(__name__)
 

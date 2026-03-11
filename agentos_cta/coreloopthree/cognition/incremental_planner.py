@@ -4,7 +4,7 @@
 from typing import Dict, Any, Optional, List
 import time
 import uuid
-from agentos_cta.utils.structured_logger import get_logger
+from agentos_cta.utils.observability import get_logger
 from .schemas import TaskPlan, TaskDAG, TaskNode, TaskStatus
 
 logger = get_logger(__name__)

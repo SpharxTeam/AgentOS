@@ -7,7 +7,7 @@ from typing import Set, Dict, Any
 import websockets
 from websockets.server import WebSocketServerProtocol
 from .base import Gateway, GatewayConfig
-from agentos_cta.utils.observability import get_logger
+from agentos_cta.utils.structured_logger import get_logger
 
 logger = get_logger(__name__)
 

@@ -3,8 +3,8 @@
 
 from typing import List, Dict, Any, Optional
 import asyncio
-from agentos_cta.utils.structured_logger import get_logger
-from agentos_cta.utils.error_types import ResourceLimitError
+from agentos_cta.utils.observability import get_logger
+from agentos_cta.utils.error import ResourceLimitError
 from .schemas import TaskNode, TaskPlan
 
 logger = get_logger(__name__)
