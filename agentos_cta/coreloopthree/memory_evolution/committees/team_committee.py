@@ -4,7 +4,7 @@
 from typing import Dict, Any, List, Optional
 import time
 from agentos_cta.utils.structured_logger import get_logger
-from agentos_cta.agents.contracts import validate_contract, ContractValidationError
+from agentos_open.markets.agent.contracts import validate_contract, ContractValidationError
 from agentos_cta.utils.file_utils import FileUtils
 
 logger = get_logger(__name__)
@@ -16,7 +16,7 @@ class TeamCommittee:
     根据其他委员会的报告，更新各Agent的规则文件（契约），实现个体进化。
     """
 
-    def __init__(self, config: Dict[str, Any], agents_dir: str = "src/agentos_cta/agents/builtin"):
+    def __init__(self, config: Dict[str, Any], agents_dir: str = "agentos_open/markets/agent/builtin"):
         self.config = config
         self.agents_dir = agents_dir
 

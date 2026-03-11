@@ -89,15 +89,24 @@ flowchart TD
 
 ### 🧩 动态团队组建（角色市场）
 
-*   **Agent 契约**：机器可读的能力描述（输入输出 Schema、成本预估、信任指标）。
-*   **注册中心**：SQLite 存储所有 Agent 元数据，支持多目标优化调度。
-*   **调度官**：根据任务需求，自动组建临时团队，任务结束即解散。
+- **Agent 契约**：机器可读的能力描述（输入输出 Schema、成本预估、信任指标）。
+- **注册中心**：SQLite 存储所有 Agent 元数据，支持多目标优化调度。
+- **调度官**：根据任务需求，自动组建临时团队，任务结束即解散。
+- **内置Agent**：产品经理、架构师、前端开发、后端开发、测试工程师、DevOps 工程师
+- **社区 Agent**：支持社区开发和贡献第三方 Agent
 
 ### 🛠️ 技能市场（Skill Market）
 
-*   独立模块，支持从 GitHub、本地、官方源安装技能。
-*   技能契约定义依赖、权限、版本，自动解析依赖。
-*   命令式管理：`skill install`、`skill list`、`skill search`。
+- **独立模块**：位于 `agentos_open/markets/skill/`，与内核解耦。
+- **多源支持**：从 GitHub、本地、官方源安装技能。
+- **技能契约**：定义依赖、权限、版本，自动解析依赖。
+- **命令式管理**：
+  ```bash
+  agentos skill install <skill-name>    # 安装技能
+  agentos skill list                     # 列出已安装技能
+  agentos skill search <query>           # 搜索技能
+  agentos skill uninstall <name>         # 卸载技能
+  ```
 
 ### 🔒 安全内生
 
@@ -119,6 +128,47 @@ flowchart TD
 *   健康检查（`agentos doctor`）一键诊断。
 
 ## 🧬 架构总览
+
+### 整体结构
+
+```
+AgentOS/
+├── agentos_cta/                 # 🔵 内核（CoreLoopThree）- 不可变核心
+│   ├── coreloopthree/           # 认知 - 行动 - 记忆与进化三层
+│   │   ├── cognition/           # 路由、双模型、规划、调度
+│   │   ├── execution/           # Agent 池、执行单元、补偿、追踪
+│   │   └── memory_evolution/    # 深层记忆、世界模型、共识、委员会
+│   ├── runtime/                 # 网关、会话、遥测、健康检查
+│   ├── saferoom/                # 安全隔离层（虚拟工位、权限、审计）
+│   └── utils/                   # 工具集（成本、延迟、Token）
+│
+├── agentos_open/                # 🔥 开放生态（可扩展）
+│   ├── markets/
+│   │   ├── agent/               # Agent 市场
+│   │   │   ├── builtin/         # 内置Agent（产品/架构/开发/测试）
+│   │   │   ├── registry/        # Agent 注册中心
+│   │   │   ├── installer/       # Agent 安装器
+│   │   │   └── contracts/       # Agent 契约规范
+│   │   └── skill/               # 技能市场
+│   │       ├── commands/        # CLI (install/list/search)
+│   │       ├── registry/        # 技能注册中心
+│   │       ├── installer/       # 技能安装器
+│   │       └── contracts/       # 技能契约规范
+│   └── contrib/                 # 社区贡献
+│       ├── agents/              # 社区 Agent
+│       └── skills/              # 社区技能
+│
+├── config/                      # 配置文件
+├── docs/                        # 文档
+├── examples/                    # 示例
+├── tests/                       # 测试
+├── scripts/                     # 工具脚本
+├── pyproject.toml               # 项目配置
+├── README.md
+└── LICENSE
+```
+
+### 架构图
 
 ```mermaid
 
@@ -172,10 +222,16 @@ flowchart TD
         Sanitizer["输入净化器 InputSanitizer"]
     end
 
-    subgraph SkillMarket["技能市场模块"]
+    subgraph SkillMarket["技能市场 (agentos_open)"]
         SkillRegistry["技能注册中心"]
         SkillInstaller["技能安装器"]
-        SkillVersion["版本管理"]
+        SkillCommands["CLI 命令<br/>install/list/search"]
+    end
+
+    subgraph AgentMarket["Agent 市场 (agentos_open)"]
+        AgentRegistry["Agent 注册中心"]
+        AgentInstaller["Agent 安装器"]
+        BuiltinAgents["内置Agents<br/>产品/架构/开发/测试/运维"]
     end
 
     subgraph Runtime["运行时管理"]
@@ -209,10 +265,15 @@ flowchart TD
     Sandbox --> Audit
     Audit --> Sanitizer
 
-    AgentPool -.-> |技能查找| SkillMarket
+    AgentPool -.-> |技能查找 | SkillMarket
     SkillMarket --> SkillRegistry
     SkillRegistry --> SkillInstaller
-    SkillInstaller --> SkillVersion
+   SkillInstaller --> SkillCommands
+       
+    Dispatcher -.-> |Agent 调度 | AgentMarket
+    AgentMarket --> AgentRegistry
+    AgentRegistry --> BuiltinAgents
+    AgentInstaller -.-> |安装 Agent | AgentPool
 
     Tracer --> SharedMemory
     SharedMemory --> DeepMemory
@@ -232,6 +293,7 @@ flowchart TD
     Config --> AgentPool
     Config --> Security
     Config --> SkillMarket
+    Config --> AgentMarket
     Config --> Runtime
 
     Data --> DeepMemory
@@ -277,19 +339,28 @@ cd agentos-examples/ecommerce_dev
 
 ## 📚 文档
 
-*   [CoreLoopThree 架构详解]()
-*   [Agent 契约规范]()
-*   [Skill 市场使用指南]()
-*   [安全配置]()
-*   [API 参考]()
+详细文档请访问：
+
+- **[CoreLoopThree 架构详解](docs/architecture/CoreLoopThree.md)** - 深入理解三层一体设计
+- **[Agent 契约规范](docs/specifications/agent_contract_spec.md)** - Agent 能力描述标准
+- **[Skill 市场使用指南](docs/guides/create_skill.md)** - 创建和发布技能
+- **[安全配置](docs/specifications/security_spec.md)** - 安全隔离与权限控制
+- **[API 参考](docs/api/)** - 完整 API 文档
+- **[部署指南](docs/guides/deployment.md)** - 生产环境部署
+- **[性能优化](docs/guides/token_optimization.md)** - Token 效率最大化技巧
+- **[故障排查](docs/guides/troubleshooting.md)** - 常见问题解答
+- **[开放生态说明](agentos_open/README.md)** - Agent 市场和技能市场详解
 
 ## 🤝 贡献
 
-我们热烈欢迎社区贡献！无论是提交 bug 报告、功能建议，还是贡献代码、Agent、Skill，请阅读我们的 [贡献指南]()。
+我们热烈欢迎社区贡献！无论是提交 bug 报告、功能建议，还是贡献代码、Agent、Skill，请阅读我们的 [贡献指南](CONTRIBUTING.md)。
 
-*   开发环境搭建见 [开发者手册]()
-*   所有贡献需通过契约测试和审计委员会审查
-*   重大变更请先开 issue 讨论
+### 参与方式
+
+- **开发环境搭建**：见 [开发者手册](docs/guides/getting_started.md)
+- **代码贡献**：所有贡献需通过契约测试和审计委员会审查
+- **Agent/Skill 开发**：参考 [agentos_open/README.md](agentos_open/README.md)
+- **重大变更**：请先开 issue 讨论
 
 ## 📄 许可证
 

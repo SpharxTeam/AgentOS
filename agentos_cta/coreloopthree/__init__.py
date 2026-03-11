@@ -3,7 +3,7 @@
 # 包含认知层、行动层、记忆与进化层的所有核心组件。
 
 # 认知层
-from agentos_cta.core.cognition import (
+from agentos_cta.coreloopthreeloopthreeloopthree.cognition import (
     Router,
     DualModelCoordinator,
     IncrementalPlanner,
@@ -17,7 +17,7 @@ from agentos_cta.core.cognition import (
 )
 
 # 行动层
-from agentos_cta.core.execution import (
+from agentos_cta.coreloopthreeloopthreeloopthree.execution import (
     AgentPool,
     ExecutionUnit,
     ToolUnit,
@@ -34,7 +34,7 @@ from agentos_cta.core.execution import (
 )
 
 # 记忆与进化层
-from agentos_cta.core.memory_evolution import (
+from agentos_cta.coreloopthreeloopthreeloopthree.memory_evolution import (
     # deep_memory
     Buffer,
     Summarizer,

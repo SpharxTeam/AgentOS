@@ -9,11 +9,11 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from agentos_cta.agents.contracts import validate_contract_file
+from agentos_open.markets.agent.builtin.contracts import validate_contract_file
 
 def scan_agents():
     root = Path(__file__).parent.parent
-    agents_dir = root / "src/agentos_cta/agents/builtin"
+    agents_dir = root / "agentos_open/markets/agent/builtin"
     agents = []
     for agent_dir in agents_dir.iterdir():
         if not agent_dir.is_dir():

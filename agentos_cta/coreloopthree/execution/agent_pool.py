@@ -4,8 +4,8 @@
 from typing import Dict, Optional, Any
 import asyncio
 from agentos_cta.utils.structured_logger import get_logger
-from agentos_cta.agents.base_agent import BaseAgent
-from agentos_cta.agents.registry_client import AgentRegistryClient
+from agentos_open.markets.agent.base_agent import BaseAgent
+from agentos_open.markets.agent.registry_client import AgentRegistryClient
 
 logger = get_logger(__name__)
 
@@ -40,16 +40,16 @@ class AgentPool:
             role = agent_info["role"]
             try:
                 if role == "product_manager":
-                    from agentos_cta.agents.builtin.product_manager.agent import ProductManagerAgent
+                    from agentos_open.markets.agent.builtin.product_manager.agent import ProductManagerAgent
                     agent_class = ProductManagerAgent
                 elif role == "architect":
-                    from agentos_cta.agents.builtin.architect.agent import ArchitectAgent
+                    from agentos_open.markets.agent.builtin.architect.agent import ArchitectAgent
                     agent_class = ArchitectAgent
                 elif role == "frontend":
-                    from agentos_cta.agents.builtin.frontend.agent import FrontendAgent
+                    from agentos_open.markets.agent.builtin.frontend.agent import FrontendAgent
                     agent_class = FrontendAgent
                 elif role == "backend":
-                    from agentos_cta.agents.builtin.backend.agent import BackendAgent
+                    from agentos_open.markets.agent.builtin.backend.agent import BackendAgent
                     agent_class = BackendAgent
                 # ... 其他角色
                 else:

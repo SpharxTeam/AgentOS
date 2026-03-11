@@ -7,19 +7,19 @@ __author__ = "SPHARX"
 __license__ = "GPL-3.0"
 
 # 导出核心类型，方便用户直接导入
-from agentos_cta.core.cognition import (
+from agentos_cta.coreloopthreeloopthreeloopthree.cognition import (
     Router,
     DualModelCoordinator,
     IncrementalPlanner,
     Dispatcher,
 )
-from agentos_cta.core.execution import (
+from agentos_cta.coreloopthreeloopthreeloopthree.execution import (
     AgentPool,
     CompensationManager,
     TraceabilityTracer,
     ExecutionUnit,
 )
-from agentos_cta.core.memory_evolution import (
+from agentos_cta.coreloopthreeloopthreeloopthree.memory_evolution import (
     DeepMemory,
     WorldModel,
     ConsensusEngine,
