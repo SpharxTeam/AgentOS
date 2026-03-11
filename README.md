@@ -12,28 +12,46 @@
   让 AI 团队像人类组织一样协作：认知、行动、记忆与进化，三层一体，持续自驱。
 </p>
 
+---
+
+## 📖 目录
+
+- [项目简介](#-项目简介)
+- [核心特性](#-核心特性)
+- [架构总览](#-架构总览)
+- [快速开始](#-快速开始)
+- [文档](#-文档)
+- [贡献](#-贡献)
+- [许可证](#-许可证)
+- [致谢](#-致谢)
+
+---
+
 ## 📖 项目简介
 
-- AgentOS 是一个面向未来的智能体操作系统框架。
-- 它不再依赖单个超级智能体解决复杂问题，而是通过动态组建专业智能体团队，将工程控制的反馈思想与系统工程的层次分解方法相结合，实现“认知‑行动‑记忆与进化”三层一体的自动化协作。
+**AgentOS** 是一个面向未来的智能体操作系统框架。
+
+它不再依赖单个超级智能体解决复杂问题，而是通过动态组建专业智能体团队，将工程控制的反馈思想与系统工程的层次分解方法相结合，实现"**认知‑行动‑记忆与进化**"三层一体的自动化协作。
 
 我们融合了相关领域的最新研究成果：
 
-*   **双系统协同**（卡尼曼 System 1/System 2）
-*   **共识语义层**（Quorum‑fast 决策、Streaming 共识）
-*   **世界模型抽象**（语义切片、时间对齐、认知漂移检测）
-*   **技能市场**（独立安装、版本管理、依赖解析）
-*   **安全内生**（虚拟工位、权限裁决、输入净化）
+- **双系统协同**（卡尼曼 System 1/System 2）
+- **共识语义层**（Quorum‑fast 决策、Streaming 共识）
+- **世界模型抽象**（语义切片、时间对齐、认知漂移检测）
+- **技能市场**（独立安装、版本管理、依赖解析）
+- **安全内生**（虚拟工位、权限裁决、输入净化）
 
-AgentOS 的目标是：当你说“开发一个电商应用”时，系统不是调用一个超级智能体去写代码，而是自动组建一个团队——产品经理理解需求、架构师设计系统、前后端分工协作、测试工程师保障质量、运维工程师负责部署。这个团队会自我管理、自我进化，而你只需给出指令，等待结果。
+AgentOS 的目标是：当你说"开发一个电商应用"时，系统不是调用一个超级智能体去写代码，而是自动组建一个团队——产品经理理解需求、架构师设计系统、前后端分工协作、测试工程师保障质量、运维工程师负责部署。这个团队会自我管理、自我进化，而你只需给出指令，等待结果。
+
+---
 
 ## ✨ 核心特性
 
 ### 🔁 三层一体（CoreLoopThree）
 
-*   **认知层**：意图理解、双模型协同（1 大 +2 小冗余）、增量规划、动态调度。
-*   **行动层**：专业 Agent 池（1+1 双模型简配）、可验证执行单元、补偿事务、责任链追踪。
-*   **记忆与进化层**：深层记忆（L1‑L4）、世界模型抽象、共识语义层、四委员会（协调/技术/审计/团队）。
+- **认知层**：意图理解、双模型协同（1 大 +2 小冗余）、增量规划、动态调度。
+- **行动层**：专业 Agent 池（1+1 双模型简配）、可验证执行单元、补偿事务、责任链追踪。
+- **记忆与进化层**：深层记忆（L1‑L4）、世界模型抽象、共识语义层、四委员会（协调/技术/审计/团队）。
 
 ```mermaid
 flowchart TD
@@ -41,13 +59,13 @@ flowchart TD
         direction TB
 
         subgraph Cognition["认知层 (Cognition)"]
-            C1["System 1 (快速响应)<br/>· 意图理解<br/>· 复杂度评估<br/>· 资源匹配"]
-            C2["System 2 (深度思考)<br/>· 双模型协同 (1大+2小)<br/>· 增量规划<br/>· 调度决策"]
-            C1 <--> C2
+           C1["System 1 (快速响应)<br/>· 意图理解<br/>· 复杂度评估<br/>· 资源匹配"]
+            C2["System 2 (深度思考)<br/>· 双模型协同 (1 大 +2 小)<br/>· 增量规划<br/>· 调度决策"]
+           C1 <--> C2
         end
 
         subgraph Execution["行动层 (Execution)"]
-            E1["System 1 (快速执行)<br/>· 专业Agent 1+1 双模型<br/>· 常规任务处理<br/>· 工具调用"]
+            E1["System 1 (快速执行)<br/>· 专业 Agent 1+1 双模型<br/>· 常规任务处理<br/>· 工具调用"]
             E2["System 2 (深度验证)<br/>· 结果交叉验证<br/>· 异常处理<br/>· 补偿事务"]
             E1 <--> E2
         end
@@ -58,74 +76,109 @@ flowchart TD
             M1 <--> M2
         end
 
-        %% 三层间的反馈闭环
-        Cognition -->|任务分配| Execution
-        Execution -->|执行反馈| Cognition
-        Execution -->|记忆存储| MemoryEvolution
-        MemoryEvolution -->|规则进化| Cognition
-        MemoryEvolution -->|规范更新| Execution
+       Cognition -->|任务分配 | Execution
+        Execution -->|执行反馈 | Cognition
+        Execution -->|记忆存储 | MemoryEvolution
+        MemoryEvolution -->|规则进化 | Cognition
+        MemoryEvolution -->|规范更新 | Execution
     end
-
-    %% 标注
-    linkStyle 0 stroke:#090,stroke-width:3px
-    linkStyle 1 stroke:#090,stroke-width:2px
-    linkStyle 2 stroke:#090,stroke-width:2px
-    linkStyle 3 stroke:#090,stroke-width:2px
-    linkStyle 4 stroke:#090,stroke-width:2px
-
 ```
 
 ### 🧠 双系统理论工程化
 
-*   每个智能体均内嵌 **System 1（快速响应）** 与 **System 2（深度思考）**，实现自我纠错与交叉验证。
-*   认知层采用 **1 主 + 2 辅冗余架构**，确保高可用。
+每个智能体均内嵌 **System 1（快速响应）** 与 **System 2（深度思考）**，实现自我纠错与交叉验证。
+
+认知层采用 **1 主 + 2 辅冗余架构**，确保高可用。
 
 ### ⚡ Token 效率最大化
 
-*   **分层记忆**（Buffer → Summary → Vector → Pattern），高成本仅用于当前轮次。
-*   **Streaming 共识**：Token 生成过程中持续检测共识，满足条件立即终止，节省 1.1‑4.4 倍 Token。
-*   **Quorum-fast 决策**：不等待全体，延迟降低 20 倍。
-*   **语义切片**：将上下文窗口视为可寻址语义空间，按需加载历史片段。
+- **分层记忆**（Buffer → Summary → Vector → Pattern），高成本仅用于当前轮次。
+- **Streaming 共识**：Token 生成过程中持续检测共识，满足条件立即终止，节省 1.1‑4.4 倍 Token。
+- **Quorum-fast 决策**：不等待全体，延迟降低 20 倍。
+- **语义切片**：将上下文窗口视为可寻址语义空间，按需加载历史片段。
+
+```mermaid
+sequenceDiagram
+    participant User as 用户
+    participant Router as 路由层
+    participant DualModel as 双模型协调器
+    participant Planner as 增量规划器
+    participant Dispatcher as 调度官
+    participant AgentPool as Agent 池
+    participant Agent as 专业 Agent (1+1)
+    participant Units as 执行单元
+    participant Tracer as 责任链追踪器
+    participant Memory as 记忆系统
+    participant Committees as 进化委员会
+
+    User->>Router: 输入指令 "开发电商应用"
+    Router->>Router: 意图理解 & 复杂度评估
+    Router->>DualModel: 启动双模型协同 (主 + 辅)
+    DualModel->>Planner: 生成初始规划 (第一阶段 DAG)
+    Planner->>Dispatcher: 任务清单 [需求分析，设计， ...]
+
+    loop 每个就绪任务
+        Dispatcher->>AgentPool: 查询合适 Agent
+        AgentPool->>Dispatcher: 返回 Agent 实例
+        Dispatcher->>Agent: 分配任务 (如需求分析)
+        activate Agent
+        Agent->>Agent: System 1 快速响应
+        Agent->>Agent: System 2 交叉验证
+        Agent->>Units: 调用执行单元 (文件/API 等)
+        Units-->>Agent: 执行结果
+        Agent-->>Dispatcher: 任务完成
+        deactivate Agent
+        Dispatcher->>Tracer: 记录执行轨迹 (TraceID)
+        Tracer->>Memory: 存储 L1 日志
+        Dispatcher-->>Planner: 任务完成通知
+        Planner->>Planner: 更新 DAG 状态
+    end
+
+    Planner->>Dispatcher: 所有任务完成
+    Dispatcher-->>User: 返回最终产出
+
+    loop 进化阶段
+        Memory->>Memory: L1→L2 摘要
+        Memory->>Memory: L2→L3 向量化
+       Committees->>Memory: 读取 L3 聚类
+       Committees->>Committees: 挖掘 L4 模式
+       Committees->>Committees: 更新技术规范/Agent 契约
+       Committees-->>Dispatcher: 规则更新生效
+    end
+```
 
 ### 🧩 动态团队组建（角色市场）
 
 - **Agent 契约**：机器可读的能力描述（输入输出 Schema、成本预估、信任指标）。
 - **注册中心**：SQLite 存储所有 Agent 元数据，支持多目标优化调度。
 - **调度官**：根据任务需求，自动组建临时团队，任务结束即解散。
-- **内置Agent**：产品经理、架构师、前端开发、后端开发、测试工程师、DevOps 工程师
-- **社区 Agent**：支持社区开发和贡献第三方 Agent
 
 ### 🛠️ 技能市场（Skill Market）
 
-- **独立模块**：位于 `agentos_open/markets/skill/`，与内核解耦。
-- **多源支持**：从 GitHub、本地、官方源安装技能。
-- **技能契约**：定义依赖、权限、版本，自动解析依赖。
-- **命令式管理**：
-  ```bash
-  agentos skill install <skill-name>    # 安装技能
-  agentos skill list                     # 列出已安装技能
-  agentos skill search <query>           # 搜索技能
-  agentos skill uninstall <name>         # 卸载技能
-  ```
+- 独立模块，支持从 GitHub、本地、官方源安装技能。
+- 技能契约定义依赖、权限、版本，自动解析依赖。
+- 命令式管理：`skill install`、`skill list`、`skill search`。
 
 ### 🔒 安全内生
 
-*   **虚拟工位**：每个 Agent 运行在独立沙箱，与用户真实设备隔离。
-*   **权限裁决引擎**：基于规则（非 LLM）判断操作权限，最小权限原则。
-*   **工具调用审计**：记录所有工具调用，支持异常检测与追溯。
-*   **输入净化器**：过滤恶意输入，防止提示词注入。
+- **虚拟工位**：每个 Agent 运行在独立沙箱，与用户真实设备隔离。
+- **权限裁决引擎**：基于规则（非 LLM）判断操作权限，最小权限原则。
+- **工具调用审计**：记录所有工具调用，支持异常检测与追溯。
+- **输入净化器**：过滤恶意输入，防止提示词注入。
 
 ### 🌍 世界模型抽象层
 
-*   **语义切片**：将上下文切分为可索引的语义块。
-*   **时间对齐**：确保多 Agent 间的时序一致性。
-*   **认知漂移检测**：识别并修正 Agent 对同一事实的理解偏差。
+- **语义切片**：将上下文切分为可索引的语义块。
+- **时间对齐**：确保多 Agent 间的时序一致性。
+- **认知漂移检测**：识别并修正 Agent 对同一事实的理解偏差。
 
 ### 📊 生产级可观测性
 
-*   OpenTelemetry 集成，分布式追踪。
-*   p95 延迟监控，Token 独特性预测。
-*   健康检查（`agentos doctor`）一键诊断。
+- OpenTelemetry 集成，分布式追踪。
+- p95 延迟监控，Token 独特性预测。
+- 健康检查（`agentos doctor`）一键诊断。
+
+---
 
 ## 🧬 架构总览
 
@@ -171,8 +224,6 @@ AgentOS/
 ### 架构图
 
 ```mermaid
-
-%%{init: {'theme': 'base', 'themeVariables': { 'primaryColor': '#f0f0f0', 'primaryBorderColor': '#333', 'primaryTextColor': '#000', 'lineColor': '#666', 'tertiaryColor': '#fff'}}}%%
 flowchart TD
     subgraph User["用户界面"]
         UI[("用户指令")]
@@ -181,23 +232,23 @@ flowchart TD
     subgraph Cognition["认知层 (Cognition)"]
         direction TB
         Router["路由层 Router<br/>意图理解·复杂度评估·资源匹配"]
-        DualModel["双模型协同协调器<br/>DualModelCoordinator (1大+2小)"]
+        DualModel["双模型协同协调器<br/>DualModelCoordinator (1 大 +2 小)"]
         Planner["增量规划器 IncrementalPlanner"]
         Dispatcher["调度官 Dispatcher"]
     end
 
     subgraph Execution["行动层 (Execution)"]
         direction TB
-        AgentPool["专业 Agent 池<br/>AgentPool (1+1双模型)"]
+        AgentPool["专业 Agent 池<br/>AgentPool (1+1 双模型)"]
         subgraph Units["执行单元池"]
             ToolUnit["工具单元"]
-            CodeUnit["代码单元"]
-            APIUnit["API单元"]
+           CodeUnit["代码单元"]
+            APIUnit["API 单元"]
             FileUnit["文件单元"]
             BrowserUnit["浏览器单元"]
             DBUnit["数据库单元"]
         end
-        Compensation["补偿事务管理器 CompensationManager"]
+       Compensation["补偿事务管理器 CompensationManager"]
         Tracer["责任链追踪器 TraceabilityTracer"]
     end
 
@@ -210,9 +261,9 @@ flowchart TD
             L4["L4 Pattern"]
         end
         WorldModel["世界模型抽象层<br/>SemanticSlicer/TemporalAligner/DriftDetector"]
-        Consensus["共识语义层<br/>QuorumFast/StabilityWindow/StreamingConsensus"]
-        SharedMemory["共享内存空间 SharedMemory<br/>中央看板·Agent注册中心·项目上下文"]
-        Committees["进化委员会<br/>协调·技术·审计·团队"]
+       Consensus["共识语义层<br/>QuorumFast/StabilityWindow/StreamingConsensus"]
+       SharedMemory["共享内存空间 SharedMemory<br/>中央看板·Agent 注册中心·项目上下文"]
+       Committees["进化委员会<br/>协调·技术·审计·团队"]
     end
 
     subgraph Security["安全隔离层"]
@@ -236,17 +287,16 @@ flowchart TD
 
     subgraph Runtime["运行时管理"]
         Gateway["网关 Gateway<br/>HTTP/WebSocket/stdio"]
-        Session["会话管理器 SessionManager"]
-        Telemetry["可观测性 Telemetry<br/>OpenTelemetry"]
+       Session["会话管理器 SessionManager"]
+       Telemetry["可观测性 Telemetry<br/>OpenTelemetry"]
         Health["健康检查 HealthChecker"]
     end
 
     subgraph ConfigData["配置与数据"]
-        Config["配置文件 config/"]
+       Config["配置文件 config/"]
         Data["工作区数据 data/"]
     end
 
-    %% 连接关系
     UI --> Router
     Router --> DualModel
     DualModel --> Planner
@@ -255,12 +305,12 @@ flowchart TD
     Dispatcher --> AgentPool
     AgentPool --> Units
     Units --> Compensation
-    Compensation --> Tracer
-    Tracer -.-> |执行反馈| Planner
+   Compensation --> Tracer
+    Tracer -.-> |执行反馈 | Planner
 
-    AgentPool -.-> |调用| Security
-    Units -.-> |权限检查| Security
-    Security --> Permission
+    AgentPool -.-> |调用 | Security
+    Units -.-> |权限检查 | Security
+   Security --> Permission
     Permission --> Sandbox
     Sandbox --> Audit
     Audit --> Sanitizer
@@ -276,66 +326,84 @@ flowchart TD
     AgentInstaller -.-> |安装 Agent | AgentPool
 
     Tracer --> SharedMemory
-    SharedMemory --> DeepMemory
+   SharedMemory --> DeepMemory
     DeepMemory --> WorldModel
     WorldModel --> Consensus
-    Consensus --> Committees
-    Committees -.-> |规则更新| AgentPool
-    Committees -.-> |契约更新| SkillMarket
+   Consensus --> Committees
+   Committees -.-> |规则更新 | AgentPool
+   Committees -.-> |契约更新 | SkillMarket
 
     Runtime --> Gateway
     Gateway --> Session
-    Session --> Telemetry
-    Telemetry --> Health
-    Health -.-> |状态报告| SharedMemory
+   Session --> Telemetry
+   Telemetry --> Health
+    Health -.-> |状态报告 | SharedMemory
 
-    Config --> Router
-    Config --> AgentPool
-    Config --> Security
-    Config --> SkillMarket
-    Config --> AgentMarket
-    Config --> Runtime
+   Config --> Router
+   Config --> AgentPool
+   Config --> Security
+   Config --> SkillMarket
+   Config --> Runtime
 
     Data --> DeepMemory
     Data --> SharedMemory
     Data --> Audit
-
-    %% 三层反馈闭环标注
-    linkStyle 12 stroke:#0a0,stroke-width:2px
-    linkStyle 18 stroke:#00a,stroke-width:2px
-    linkStyle 23 stroke:#a00,stroke-width:2px
-
 ```
+
+---
 
 ## 🚀 快速开始
 
 ### 安装
 
-# 一键安装（Linux/macOS）
+#### 方式一：一键安装（推荐）
+
+```bash
+# Linux/macOS
 curl -fsSL https://agentos.org/install.sh | bash
 
-# 或使用 pip
-pip install agentos-cta
+# Windows PowerShell
+Invoke-WebRequest -Uri https://agentos.org/install.ps1 -OutFile install.ps1; .\install.ps1
+```
 
-# 初始化配置
+#### 方式二：使用 pip
+
+```bash
+pip install agentos-cta
+```
+
+#### 初始化配置
+
+```bash
 agentos init
+```
 
 ### 启动服务
 
-# 本地开发模式
-agentos gateway start --port 18789
+#### 本地开发模式
 
-# 健康检查
+```bash
+agentos gateway start --port 18789
+```
+
+#### 健康检查
+
+```bash
 agentos doctor
+```
 
 ### 第一个示例：电商应用开发
 
-# 克隆示例
+```bash
+# 克隆示例仓库
 git clone https://github.com/yourname/agentos-examples
 cd agentos-examples/ecommerce_dev
 
 # 运行（自动组建团队）
 ./run.sh
+```
+
+---
 
 ## 📚 文档
 
@@ -349,7 +417,8 @@ cd agentos-examples/ecommerce_dev
 - **[部署指南](docs/guides/deployment.md)** - 生产环境部署
 - **[性能优化](docs/guides/token_optimization.md)** - Token 效率最大化技巧
 - **[故障排查](docs/guides/troubleshooting.md)** - 常见问题解答
-- **[开放生态说明](agentos_open/README.md)** - Agent 市场和技能市场详解
+
+---
 
 ## 🤝 贡献
 
@@ -359,27 +428,42 @@ cd agentos-examples/ecommerce_dev
 
 - **开发环境搭建**：见 [开发者手册](docs/guides/getting_started.md)
 - **代码贡献**：所有贡献需通过契约测试和审计委员会审查
-- **Agent/Skill 开发**：参考 [agentos_open/README.md](agentos_open/README.md)
 - **重大变更**：请先开 issue 讨论
+- **文档改进**：帮助完善文档和示例代码
+
+### 开发流程
+
+1. Fork 本仓库
+2. 创建特性分支 (`git checkout -b feature/amazing-feature`)
+3. 提交更改 (`git commit -m 'Add some amazing feature'`)
+4. 推送到分支 (`git push origin feature/amazing-feature`)
+5. 创建 Pull Request
+
+---
 
 ## 📄 许可证
 
-AgentOS 使用 GNU General Public License v3.0 开源。详见 [LICENSE](LICENSE) 文件。
+AgentOS 使用 **GNU General Public License v3.0** 开源许可证。
+
+详见 [LICENSE](LICENSE) 文件。
+
+---
 
 ## 🙏 致谢
 
 AgentOS 的设计与实现离不开以下开源项目与学术研究的启发：
 
-*   **OpenClaw** —— 技能市场与医生自检机制
-*   **三省六部** —— 多智能体分工与治理思想
-*   **Agent-Kernel** —— 模块化微内核架构
-*   **CogniGUI** —— 双系统理论与 GRPO 机制
-*   **Architecting AgentOS (arXiv:2602.20934)** —— 可寻址语义空间
-*   **Agentic Consensus (arXiv:2512.20184)** —— 共识驱动早停与 Quorum‑fast 决策
-*   **NVIDIA NeMo Agent Toolkit** —— Token 独特性预测与生产级实践
-*   **女娲智能体 OS** —— 虚拟工位安全沙箱
-*   **IETF ADOL 草案** —— 数据优化层设计
+- **[OpenClaw](https://github.com/openclaw)** —— 技能市场与医生自检机制
+- **[三省六部](https://github.com/sanliu-liubu)** —— 多智能体分工与治理思想
+- **[Agent-Kernel](https://github.com/agent-kernel)** —— 模块化微内核架构
+- **[CogniGUI](https://github.com/cognigui)** —— 双系统理论与 GRPO 机制
+- **[Architecting AgentOS (arXiv:2602.20934)](https://arxiv.org/abs/2602.20934)** —— 可寻址语义空间
+- **[Agentic Consensus (arXiv:2512.20184)](https://arxiv.org/abs/2512.20184)** —— 共识驱动早停与 Quorum‑fast 决策
+- **[NVIDIA NeMo Agent Toolkit](https://github.com/NVIDIA/NeMo)** —— Token 独特性预测与生产级实践
+- **[女娲智能体 OS](https://github.com/nuwa-agent)** —— 虚拟工位安全沙箱
+- **[IETF ADOL 草案](https://datatracker.ietf.org/doc/draft-adol/)** —— 数据优化层设计
 
+---
 
 <p align="center">
   <sub>Built with ❤️ by the AgentOS community</sub>
