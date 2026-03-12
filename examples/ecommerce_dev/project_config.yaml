@@ -1,9 +1,0 @@
-project_name: E-Commerce Demo
-goal: Develop a simple e-commerce application with product listing and cart
-tech_stack:
-  frontend: react
-  backend: nodejs
-  database: postgres
-constraints:
-  timeline_days: 7
-  budget_usd: 100
