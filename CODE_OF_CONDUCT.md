@@ -70,8 +70,8 @@
 
 如需举报违规行为或对本行为准则有任何疑问，请联系：
 
-- **主要邮箱**: conduct@spharx.cn
-- **备用邮箱**: lidecheng@spharx.cn, wangliren@spharx.cn
+- **主要邮箱**: lidecheng@spharx.cn
+- **备用邮箱**: wangliren@spharx.cn
 - **官方网站**: https://spharx.cn
 
 ## 归属

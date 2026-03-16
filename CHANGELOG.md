@@ -373,7 +373,8 @@ _（v1.0.0.3 为首次公开发布版本，无破坏性变更）_
 
 ## 联系方式
 
-- **GitHub**: https://github.com/spharx/spharxworks
+- **Gitee**: https://gitee.com/spharx/agentos
+- **GitHub**: https://github.com/spharx-team/AgentOS
 - **邮箱**: lidecheng@spharx.cn, wangliren@spharx.cn
 - **官网**: https://spharx.cn
 

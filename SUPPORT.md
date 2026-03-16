@@ -49,14 +49,15 @@
 - 询问具体问题
 
 **使用方法**:
-1. 访问 [GitHub Issues](https://github.com/spharx/spharxworks/issues)
+1. 访问 [Gitee Issues](https://gitee.com/spharx/agentos/issues) (官方，首选)
+   或 [GitHub Issues](https://github.com/spharx-team/AgentOS/issues) (镜像)
 2. 搜索是否已有类似问题
 3. 创建新 Issue 并选择合适的模板
 4. 提供详细信息（环境、复现步骤、错误日志等）
 
 **响应时间**: 48 小时内
 
-### GitHub Discussions
+### GitHub Discussions（镜像）
 
 **适用场景**:
 - 一般性问题讨论
@@ -65,7 +66,7 @@
 - 社区交流
 
 **使用方法**:
-1. 访问 [GitHub Discussions](https://github.com/spharx/spharxworks/discussions)
+1. 访问 [GitHub Discussions](https://github.com/spharx-team/AgentOS/discussions)
 2. 选择合适的分类（Q&A、Show and tell、General 等）
 3. 发布讨论帖
 
@@ -175,7 +176,7 @@
 
 **A**: 可以，但需要注意：
 
-- **开源用途**: 免费使用，但需遵守 GPL-3.0 协议
+- **开源用途**: 免费使用，但需遵守 Apache 2.0 协议
 - **商业用途**: 需要申请商业授权
 - 详见 [LICENSE](LICENSE) 文件
 

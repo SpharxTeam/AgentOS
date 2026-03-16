@@ -1,12 +1,14 @@
 # MemoryRovol - AgentOS 记忆卷载核心模块
 
 **路径**: `coreadd/memoryrovol/`  
-**版本**: 1.0.0.2  
-**许可证**: GPL-3.0  
+**版本**: 1.0.0.3 
+**许可证**: Apache License 2.0  
 
 ## 概述
 
-MemoryRovol 是 AgentOS 的内核级记忆系统，实现四层卷载架构：原始卷（L1）、特征层（L2）、结构层（L3）、模式层（L4）。它提供了完整的记忆存储、检索、抽象和进化能力，是智能体实现持续学习的基础。
+MemoryRovol 是 AgentOS 的内核级记忆系统，实现四层卷载架构：原始卷（L1）、特征层（L2）、结构层（L3）、模式层（L4）。
+
+它提供了完整的记忆存储、检索、抽象和进化能力，是智能体实现持续学习的基础。
 
 ## 模块结构
 ```
@@ -81,4 +83,4 @@ rov_init_from_json("config/memory_config.json");
 
 ## 许可证
 
-GPL-3.0 © 2026 SPHARX. "From data intelligence emerges."
+Apache License 2.0 © 2026 SPHARX. "From data intelligence emerges."

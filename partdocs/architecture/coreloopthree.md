@@ -1,4 +1,4 @@
-# CoreLoopThree：三层核心运行时架构详解
+# CoreLoopThree：三层一体核心运行时架构详解
 
 **版本**: v1.0.0.3  
 **最后更新**: 2026-03-16  
@@ -8,7 +8,9 @@
 
 ## 1. 概述
 
-CoreLoopThree 是 AgentOS 的核心创新架构，通过将智能体运行时划分为三个正交且协同的层次，实现认知、行动和记忆的有机统一。这三层通过可插拔的策略接口和标准化的数据流协作，形成完整的智能体生命周期管理闭环。
+CoreLoopThree 是 AgentOS 的核心创新架构，通过将智能体运行时划分为三个正交且协同的层次，实现认知、行动和记忆的有机统一。
+
+这三层通过可插拔的策略接口和标准化的数据流协作，形成完整的智能体生命周期管理闭环。
 
 ### 1.1 设计理念
 
@@ -678,7 +680,7 @@ agentos_execution_register_unit(engine, "my_unit", &my_unit->base);
 
 <div align="center">
 
-**SPHARX 极光感知科技**
+**SPHARX极光感知科技**
 
 *From data intelligence emerges*
 
