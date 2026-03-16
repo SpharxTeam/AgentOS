@@ -1,4 +1,4 @@
-# MemoryRovol：四层记忆卷载系统架构详解
+# MemoryRovol：记忆卷载系统架构详解
 
 **版本**: v1.0.0.3  
 **最后更新**: 2026-03-16  
@@ -8,7 +8,9 @@
 
 ## 1. 概述
 
-MemoryRovol 是 AgentOS 的内核级记忆系统，实现从原始数据到高级模式的全栈记忆管理能力。它不仅是简单的数据存储，更是智能体实现持续学习、知识积累和智能进化的核心基础设施。
+MemoryRovol 是 AgentOS 的内核级记忆系统，实现从原始数据到高级模式的全栈记忆管理能力。
+
+它不仅是简单的数据存储，更是智能体实现持续学习、知识积累和智能进化的核心基础设施。
 
 ### 1.1 设计理念
 
@@ -1136,7 +1138,7 @@ agentos_layer2_feature_config_t config = {
 
 <div align="center">
 
-**SPHARX 极光感知科技**
+**SPHARX极光感知科技**
 
 *From data intelligence emerges*
 

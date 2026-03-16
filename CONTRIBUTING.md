@@ -23,10 +23,10 @@
 
 ## 快速导航
 
-- 🐛 [报告 Bug](https://github.com/spharx/spharxworks/issues/new?labels=bug)
-- 💡 [提出功能建议](https://github.com/spharx/spharxworks/issues/new?labels=enhancement)
+- 🐛 [报告 Bug](https://gitee.com/spharx/agentos/issues/new?issue_type=bug) (Gitee 官方)
+- 💡 [提出功能建议](https://gitee.com/spharx/agentos/issues/new?issue_type=feature) (Gitee 官方)
 - 📖 [查看文档](partdocs/)
-- 💬 [参与讨论](https://github.com/spharx/spharxworks/discussions)
+- 💬 [参与讨论](https://github.com/spharx-team/AgentOS/discussions) (GitHub 镜像)
 
 ---
 
@@ -35,13 +35,21 @@
 ### 1. Fork 和克隆项目
 
 ```bash
-# 1. 在 GitHub 上 Fork 本项目
+# 1. 在 Gitee/GitHub上Fork本项目
+#    官方仓库：https://gitee.com/spharx/agentos
+#    镜像仓库：https://github.com/spharx-team/AgentOS
+#
 # 2. 克隆您的 fork
-git clone https://github.com/YOUR_USERNAME/spharxworks.git
-cd spharxworks/AgentOS
+git clone https://gitee.com/YOUR_USERNAME/agentos.git
+# 或
+git clone https://github.com/YOUR_USERNAME/AgentOS.git
+
+cd agentos  # 或 cd AgentOS
 
 # 3. 添加上游仓库
-git remote add upstream https://github.com/spharx/spharxworks.git
+git remote add upstream https://gitee.com/spharx/agentos.git
+# 或
+git remote add upstream https://github.com/spharx-team/AgentOS.git
 ```
 
 ### 2. 安装依赖
@@ -361,9 +369,15 @@ A: 破坏性变更需要：
 
 ## 联系方式
 
-- **GitHub Issues**: https://github.com/spharx/spharxworks/issues
+- **Gitee Issues**: https://gitee.com/spharx/agentos/issues (官方，首选)
+- **GitHub Issues**: https://github.com/spharx-team/AgentOS/issues (镜像)
 - **邮箱**: lidecheng@spharx.cn, wangliren@spharx.cn
 - **官方网站**: https://spharx.cn
+
+### 仓库链接
+
+- **官方仓库**: https://gitee.com/spharx/agentos
+- **镜像仓库**: https://github.com/spharx-team/AgentOS
 
 ---
 

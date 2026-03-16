@@ -18,12 +18,14 @@
 ### 创始团队
 
 - **Decheng.Li** - 创始人、系统集成工程师、架构师
-  - Gitee: [@lidecheng](https://github.com/spharx)
+  - Gitee: [@lidecheng](https://gitee.com/lidecheng)
+  - GitHub: [@spharx](https://github.com/spharx)
   - 邮箱：lidecheng@spharx.cn
   - 负责领域：系统架构、技术战略
 
 - **Liren.Wang** - 联合创始人、技术负责人
-  - Gitee: [@wangliren](https://github.com/spharx)
+  - Gitee: [@wangliren](https://gitee.com/wangliren)
+  - GitHub: [@spharx](https://github.com/spharx)
   - 邮箱：wangliren@spharx.cn
   - 负责领域：内核开发、性能优化、工程管理
 
@@ -117,8 +119,13 @@ _（开发中，贡献者名单将在版本发布时更新）_
 
 1. **Fork 项目**
    ```bash
-   git clone https://github.com/YOUR_USERNAME/spharxworks.git
-   cd spharxworks/AgentOS
+   # 从 Gitee 克隆（推荐）
+   git clone https://gitee.com/YOUR_USERNAME/agentos.git
+   cd agentos
+   
+   # 或从 GitHub 克隆
+   git clone https://github.com/YOUR_USERNAME/AgentOS.git
+   cd AgentOS
    ```
 
 2. **创建分支**
@@ -194,9 +201,10 @@ _（统计数据将在首次发布时更新）_
 
 如果您有任何问题或建议，欢迎联系：
 
-- **GitHub Issues**: https://github.com/spharx/spharxworks/issues
+- **Gitee Issues**: https://gitee.com/spharx/agentos/issues (官方，首选)
+- **GitHub Issues**: https://github.com/spharx-team/AgentOS/issues (镜像)
 - **邮箱**: lidecheng@spharx.cn, wangliren@spharx.cn
-- **讨论区**: https://github.com/spharx/spharxworks/discussions
+- **讨论区**: https://github.com/spharx-team/AgentOS/discussions
 
 ---
 
