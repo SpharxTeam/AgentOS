@@ -1,0 +1,57 @@
+/**
+ * @file habitat.h
+ * @brief AgentOS 运行时管理公共接口
+ * @copyright (c) 2026 SPHARX. All Rights Reserved. "From data intelligence emerges."
+ */
+
+#ifndef AGENTOS_HABITAT_H
+#define AGENTOS_HABITAT_H
+
+#include <stddef.h>
+#include <stdint.h>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+/**
+ * @brief Habitat 服务器不透明句柄
+ */
+typedef struct habitat_server habitat_server_t;
+
+/**
+ * @brief Habitat 配置结构
+ */
+typedef struct habitat_config {
+    const char* http_host;          /**< HTTP 监听地址，如 "0.0.0.0" */
+    uint16_t     http_port;          /**< HTTP 端口 */
+    const char* ws_host;            /**< WebSocket 监听地址 */
+    uint16_t     ws_port;            /**< WebSocket 端口 */
+    int         enable_stdio;       /**< 是否启用 stdio 网关（1 启用） */
+    uint32_t    max_sessions;       /**< 最大并发会话数 */
+    uint32_t    session_timeout_sec; /**< 会话闲置超时（秒） */
+    uint32_t    health_interval_sec; /**< 健康检查间隔（秒） */
+    const char* metrics_path;       /**< 指标导出路径（如 "/metrics"） */
+} habitat_config_t;
+
+/**
+ * @brief 启动 Habitat 服务器（阻塞调用，直到停止）
+ * @param config 配置（若为 NULL 则使用默认值）
+ * @return 0 成功，-1 失败
+ */
+int habitat_start(const habitat_config_t* config);
+
+/**
+ * @brief 停止 Habitat 服务器（异步，可被信号调用）
+ */
+void habitat_stop(void);
+
+/**
+ * @brief 等待服务器退出（阻塞）
+ */
+void habitat_wait(void);
+
+#ifdef __cplusplus
+}
+#endif
+#endif /* AGENTOS_HABITAT_H */
