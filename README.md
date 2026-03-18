@@ -14,6 +14,11 @@
 </div>
 
 ---
+## 简介
+- Agnet OS（SuperAI OS）智能体团队操作系统。
+- 使用全新的CoreLoopThree架构和MemoryRovol记忆卷载。
+- 可以工程化的完成任务，最大化拉满token使用效率。
+- 全新架构在token利用效率上领先当前行业主流框架2-5倍。
 
 ## 📋 项目概述
 
