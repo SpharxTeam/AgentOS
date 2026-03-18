@@ -111,7 +111,7 @@ build_kernel() {
         cd build
 
         # 配置 CMake
-        cmake ../coreadd \
+        cmake ../atoms \
             -DCMAKE_BUILD_TYPE=Release \
             -DBUILD_TESTS=OFF \
             -DENABLE_TRACING=OFF

@@ -1,0 +1,4 @@
+#ifndef AGENTOS_TOOL_SERVICE_H
+#define AGENTOS_TOOL_SERVICE_H
+
+#endif
