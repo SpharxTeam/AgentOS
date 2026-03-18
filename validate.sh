@@ -186,7 +186,7 @@ check_project_structure() {
     echo -e "\n${BLUE}检查项目结构...${NC}"
 
     # 检查关键目录
-    DIRS=("coreadd" "coresdk" "coresvc" "config" "scripts" "partdocs" "tests")
+    DIRS=("atoms" "backs" "domes" "tools" "config" "scripts" "partdocs" "tests")
     for dir in "${DIRS[@]}"; do
         if [ -d "$dir" ]; then
             print_check "目录：$dir" "PASS"

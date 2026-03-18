@@ -1,0 +1,4 @@
+#ifndef AGENTOS_MARKET_SERVICE_H
+#define AGENTOS_MARKET_SERVICE_H
+
+#endif

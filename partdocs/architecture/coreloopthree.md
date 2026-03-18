@@ -2,7 +2,7 @@
 
 **版本**: v1.0.0.3  
 **最后更新**: 2026-03-16  
-**路径**: `coreadd/coreloopthree/`
+**路径**: `atoms/coreloopthree/`
 
 ---
 
@@ -100,7 +100,7 @@ CoreLoopThree 是 AgentOS 的核心创新架构，通过将智能体运行时划
 ### 2.2 目录结构
 
 ```
-coreadd/coreloopthree/
+atoms/coreloopthree/
 ├── CMakeLists.txt                 # 顶层构建文件
 ├── README.md                      # 模块说明
 ├── include/                       # 公共头文件
