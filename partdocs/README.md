@@ -1,4 +1,4 @@
-# AgentOS 技术文档中心 (Partdocs)
+# AgentOS 技术文档中心 (PartDocs)
 
 **版本**: 1.0.0.3  
 **最后更新**: 2026-03-18  

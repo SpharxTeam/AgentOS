@@ -1,185 +1,159 @@
 /**
  * @file service.c
- * @brief LLM 服务核心业务逻辑
- * @copyright (c) 2026 SPHARX. All Rights Reserved. "From data intelligence emerges."
+ * @brief 服务核心逻辑实现
+ * @copyright (c) 2026 SPHARX. All Rights Reserved.
  */
 
-#include "llm_service.h"
-#include "provider.h"
-#include "cache.h"
-#include "cost_tracker.h"
-#include "token_counter.h"
-#include "queue.h"
-#include "logger.h"
-#include <yaml.h>
+#include "service.h"
+#include "svc_logger.h"
+#include "svc_error.h"
+#include "svc_config.h"
+#include "response.h"
 #include <stdlib.h>
 #include <string.h>
-#include <pthread.h>
+#include <yaml.h>
 
-typedef struct provider_entry {
-    const char* name;
-    const provider_ops_t* ops;
-    void* ctx;
-    struct provider_entry* next;
-} provider_entry_t;
+/* ---------- 缓存键生成 ---------- */
+static char* make_cache_key(const llm_request_config_t* config) {
+    size_t len = strlen(config->model) + 2;
+    for (size_t i = 0; i < config->message_count; ++i) {
+        len += strlen(config->messages[i].role) + 1 +
+               strlen(config->messages[i].content) + 1;
+    }
+    char* key = malloc(len);
+    if (!key) return NULL;
 
-struct llm_service {
-    provider_entry_t* providers;
-    cache_t* cache;
-    cost_tracker_t* cost_tracker;
-    token_counter_t* token_counter;
-    request_queue_t* queue;
-    pthread_t worker_thread;
-    volatile int running;
-    pthread_mutex_t lock;
-};
+    char* p = key;
+    p = stpcpy(p, config->model);
+    *p++ = '|';
+    for (size_t i = 0; i < config->message_count; ++i) {
+        p = stpcpy(p, config->messages[i].role);
+        *p++ = ':';
+        p = stpcpy(p, config->messages[i].content);
+        *p++ = '|';
+    }
+    *(--p) = '\0';
+    return key;
+}
 
-/* 从 YAML 加载配置 */
-static int load_config(const char* path, llm_service_t* svc) {
-    FILE* f = fopen(path, "rb");
-    if (!f) {
-        AGENTOS_LOG_ERROR("service: cannot open config %s", path);
-        return -1;
+/* ---------- 从 YAML 节点加载定价规则 ---------- */
+static pricing_rule_t* load_pricing_rules(cJSON* root, int* count) {
+    cJSON* pricing = cJSON_GetObjectItem(root, "pricing");
+    if (!pricing || !cJSON_IsArray(pricing)) {
+        *count = 0;
+        return NULL;
     }
 
-    yaml_parser_t parser;
-    yaml_event_t event;
-    yaml_parser_initialize(&parser);
-    yaml_parser_set_input_file(&parser, f);
+    int n = cJSON_GetArraySize(pricing);
+    pricing_rule_t* rules = calloc(n, sizeof(pricing_rule_t));
+    if (!rules) return NULL;
 
-    int in_providers = 0;
-    char* current_provider = NULL;
-    provider_config_t pcfg = {0};
+    for (int i = 0; i < n; ++i) {
+        cJSON* item = cJSON_GetArrayItem(pricing, i);
+        cJSON* pattern = cJSON_GetObjectItem(item, "pattern");
+        cJSON* input = cJSON_GetObjectItem(item, "input_price_per_k");
+        cJSON* output = cJSON_GetObjectItem(item, "output_price_per_k");
 
-    while (1) {
-        if (!yaml_parser_parse(&parser, &event)) break;
-        if (event.type == YAML_SCALAR_EVENT) {
-            const char* val = (const char*)event.data.scalar.value;
-            if (!in_providers && strcmp(val, "providers") == 0) {
-                in_providers = 1;
-            } else if (in_providers && strcmp(val, "name") == 0) {
-                yaml_parser_parse(&parser, &event);
-                current_provider = strdup((const char*)event.data.scalar.value);
-            } else if (in_providers && current_provider && strcmp(val, "api_key") == 0) {
-                yaml_parser_parse(&parser, &event);
-                pcfg.api_key = strdup((const char*)event.data.scalar.value);
-            } else if (in_providers && current_provider && strcmp(val, "api_base") == 0) {
-                yaml_parser_parse(&parser, &event);
-                pcfg.api_base = strdup((const char*)event.data.scalar.value);
-            } else if (in_providers && current_provider && strcmp(val, "organization") == 0) {
-                yaml_parser_parse(&parser, &event);
-                pcfg.organization = strdup((const char*)event.data.scalar.value);
-            } else if (in_providers && current_provider && strcmp(val, "timeout_sec") == 0) {
-                yaml_parser_parse(&parser, &event);
-                pcfg.timeout_sec = atof((const char*)event.data.scalar.value);
-            } else if (in_providers && current_provider && strcmp(val, "max_retries") == 0) {
-                yaml_parser_parse(&parser, &event);
-                pcfg.max_retries = atoi((const char*)event.data.scalar.value);
-            }
-        } else if (event.type == YAML_MAPPING_END_EVENT) {
-            if (in_providers && current_provider) {
-                const provider_ops_t* ops = provider_get_ops(current_provider);
-                if (ops) {
-                    pcfg.name = current_provider;
-                    void* ctx = ops->init(&pcfg);
-                    if (ctx) {
-                        provider_entry_t* e = (provider_entry_t*)malloc(sizeof(provider_entry_t));
-                        if (e) {
-                            e->name = strdup(current_provider);
-                            e->ops = ops;
-                            e->ctx = ctx;
-                            e->next = svc->providers;
-                            svc->providers = e;
-                        }
-                    } else {
-                        AGENTOS_LOG_ERROR("service: failed to init provider %s", current_provider);
-                    }
-                } else {
-                    AGENTOS_LOG_ERROR("service: unknown provider %s", current_provider);
-                }
-                free((void*)pcfg.api_key);
-                free((void*)pcfg.api_base);
-                free((void*)pcfg.organization);
-                free(current_provider);
-                current_provider = NULL;
-                memset(&pcfg, 0, sizeof(pcfg));
-            }
+        if (cJSON_IsString(pattern) && cJSON_IsNumber(input) && cJSON_IsNumber(output)) {
+            rules[i].model_pattern = strdup(pattern->valuestring);
+            rules[i].input_price_per_k = input->valuedouble;
+            rules[i].output_price_per_k = output->valuedouble;
+        } else {
+            /* 格式错误，跳过 */
+            rules[i].model_pattern = NULL;
         }
-        yaml_event_delete(&event);
-        if (event.type == YAML_STREAM_END_EVENT) break;
     }
-    yaml_parser_delete(&parser);
-    fclose(f);
-    return 0;
+    *count = n;
+    return rules;
 }
 
-/* 工作线程：处理队列中的请求 */
-static void* worker_thread_func(void* arg) {
-    llm_service_t* svc = (llm_service_t*)arg;
-    while (svc->running) {
-        // 从队列中取出请求并处理（简化版，实际需更复杂调度）
-        // 这里仅作占位，实际 llm_service_complete 是同步的，无需队列
-        sleep(1);
-    }
-    return NULL;
-}
-
+/* ---------- 创建服务 ---------- */
 llm_service_t* llm_service_create(const char* config_path) {
-    llm_service_t* svc = (llm_service_t*)calloc(1, sizeof(llm_service_t));
+    llm_service_t* svc = calloc(1, sizeof(llm_service_t));
     if (!svc) return NULL;
-
     pthread_mutex_init(&svc->lock, NULL);
 
-    // 创建缓存
-    svc->cache = cache_create(1000, 3600); // 1000条，TTL 1小时
+    /* 加载基础配置 */
+    service_config_t base_cfg;
+    if (svc_config_load(config_path, &base_cfg) != 0) {
+        SVC_LOG_ERROR("Failed to load base config");
+        goto fail;
+    }
+
+    /* 额外解析定价规则（因为 svc_config 未包含） */
+    FILE* f = fopen(config_path, "rb");
+    if (!f) {
+        SVC_LOG_ERROR("Cannot open config for pricing");
+        svc_config_free(&base_cfg);
+        goto fail;
+    }
+    char* yaml_content = NULL;
+    size_t yaml_len = 0;
+    /* 简单读取整个文件（生产级应用应使用 YAML 解析器，这里简化为示例） */
+    fseek(f, 0, SEEK_END);
+    yaml_len = ftell(f);
+    fseek(f, 0, SEEK_SET);
+    yaml_content = malloc(yaml_len + 1);
+    fread(yaml_content, 1, yaml_len, f);
+    yaml_content[yaml_len] = '\0';
+    fclose(f);
+
+    cJSON* root = cJSON_Parse(yaml_content);
+    free(yaml_content);
+    if (!root) {
+        SVC_LOG_ERROR("Failed to parse YAML for pricing");
+        svc_config_free(&base_cfg);
+        goto fail;
+    }
+
+    int rule_count = 0;
+    pricing_rule_t* rules = load_pricing_rules(root, &rule_count);
+    cJSON_Delete(root);
+
+    svc->registry = provider_registry_create(&base_cfg);
+    if (!svc->registry) {
+        SVC_LOG_ERROR("Failed to create provider registry");
+        svc_config_free(&base_cfg);
+        free(rules);
+        goto fail;
+    }
+
+    svc->cache = cache_create(base_cfg.cache_capacity, base_cfg.cache_ttl_sec);
     if (!svc->cache) {
-        AGENTOS_LOG_ERROR("service: failed to create cache");
+        SVC_LOG_ERROR("Failed to create cache");
+        provider_registry_destroy(svc->registry);
+        svc_config_free(&base_cfg);
+        free(rules);
         goto fail;
     }
 
-    // 创建成本跟踪器
-    svc->cost_tracker = cost_tracker_create();
-    if (!svc->cost_tracker) {
-        AGENTOS_LOG_ERROR("service: failed to create cost tracker");
+    svc->cost = cost_tracker_create(rules, rule_count);
+    if (!svc->cost) {
+        SVC_LOG_ERROR("Failed to create cost tracker");
+        cache_destroy(svc->cache);
+        provider_registry_destroy(svc->registry);
+        svc_config_free(&base_cfg);
+        free(rules);
         goto fail;
     }
 
-    // 创建 Token 计数器
-    svc->token_counter = token_counter_create("cl100k_base");
+    svc->token_counter = token_counter_create(base_cfg.token_encoding);
     if (!svc->token_counter) {
-        AGENTOS_LOG_ERROR("service: failed to create token counter");
+        SVC_LOG_ERROR("Failed to create token counter");
+        cost_tracker_destroy(svc->cost);
+        cache_destroy(svc->cache);
+        provider_registry_destroy(svc->registry);
+        svc_config_free(&base_cfg);
+        free(rules);
         goto fail;
     }
 
-    // 创建请求队列
-    svc->queue = queue_create(1024);
-    if (!svc->queue) {
-        AGENTOS_LOG_ERROR("service: failed to create queue");
-        goto fail;
-    }
-
-    // 加载配置
-    if (config_path && load_config(config_path, svc) != 0) {
-        AGENTOS_LOG_ERROR("service: failed to load config");
-        goto fail;
-    }
-
-    // 启动工作线程（可选）
-    svc->running = 1;
-    if (pthread_create(&svc->worker_thread, NULL, worker_thread_func, svc) != 0) {
-        AGENTOS_LOG_ERROR("service: failed to create worker thread");
-        svc->running = 0;
-        goto fail;
-    }
-
-    AGENTOS_LOG_INFO("service: initialized with %d providers", (int)svc->providers?1:0);
+    svc_config_free(&base_cfg);
+    free(rules);
+    SVC_LOG_INFO("LLM service initialized");
     return svc;
 
 fail:
-    if (svc->cache) cache_destroy(svc->cache);
-    if (svc->cost_tracker) cost_tracker_destroy(svc->cost_tracker);
-    if (svc->token_counter) token_counter_destroy(svc->token_counter);
-    if (svc->queue) queue_destroy(svc->queue);
     pthread_mutex_destroy(&svc->lock);
     free(svc);
     return NULL;
@@ -187,118 +161,103 @@ fail:
 
 void llm_service_destroy(llm_service_t* svc) {
     if (!svc) return;
-    svc->running = 0;
-    pthread_join(svc->worker_thread, NULL);
-    pthread_mutex_lock(&svc->lock);
-    provider_entry_t* p = svc->providers;
-    while (p) {
-        provider_entry_t* next = p->next;
-        p->ops->destroy(p->ctx);
-        free((void*)p->name);
-        free(p);
-        p = next;
-    }
+    provider_registry_destroy(svc->registry);
     cache_destroy(svc->cache);
-    cost_tracker_destroy(svc->cost_tracker);
+    cost_tracker_destroy(svc->cost);
     token_counter_destroy(svc->token_counter);
-    queue_destroy(svc->queue);
-    pthread_mutex_unlock(&svc->lock);
     pthread_mutex_destroy(&svc->lock);
     free(svc);
 }
 
+/* ---------- 同步完成 ---------- */
 int llm_service_complete(llm_service_t* svc,
                          const llm_request_config_t* config,
                          llm_response_t** out_response) {
-    if (!svc || !config || !out_response) return -1;
+    if (!svc || !config || !out_response) return ERR_INVALID_ARG;
 
-    // 根据配置选择提供商（简化：取第一个支持该模型的）
-    provider_entry_t* p = svc->providers;
-    while (p) {
-        // 这里可以加更复杂的路由逻辑，如根据模型名匹配
-        // 简化为使用第一个
-        break;
-    }
-    if (!p) {
-        AGENTOS_LOG_ERROR("service: no provider available");
-        return -1;
-    }
+    char* cache_key = make_cache_key(config);
+    if (!cache_key) return ERR_NOMEM;
 
-    // 构建请求体
-    char* request_body = p->ops->build_request(p->ctx, config);
-    if (!request_body) {
-        AGENTOS_LOG_ERROR("service: failed to build request");
-        return -1;
+    /* 查缓存 */
+    char* cached_json = NULL;
+    if (cache_get(svc->cache, cache_key, &cached_json) == 1 && cached_json) {
+        llm_response_t* cached_resp = response_from_json(cached_json);
+        free(cached_json);
+        if (cached_resp) {
+            *out_response = cached_resp;
+            free(cache_key);
+            SVC_LOG_DEBUG("Cache hit for %s", cache_key);
+            return 0;
+        }
     }
 
-    // 确定 URL（应从 p->ctx 中获取）
-    // 简化：使用固定 URL，实际应通过配置
-    char url[512];
-    snprintf(url, sizeof(url), "https://api.openai.com/v1/chat/completions"); // 示例
+    /* 找提供商 */
+    pthread_mutex_lock(&svc->lock);
+    const provider_t* prov = provider_registry_find(svc->registry, config->model);
+    pthread_mutex_unlock(&svc->lock);
+    if (!prov) {
+        SVC_LOG_ERROR("No provider for model %s", config->model);
+        free(cache_key);
+        return ERR_NOT_FOUND;
+    }
 
-    // 执行 HTTP 请求
-    http_buffer_t* resp = NULL;
-    long http_code = 0;
-    int ret = provider_http_post(url, "dummy-key", request_body, 30.0, &resp, &http_code);
-    free(request_body);
+    llm_response_t* resp = NULL;
+    int ret = prov->ops->complete(prov->ctx, config, &resp);
     if (ret != 0) {
-        AGENTOS_LOG_ERROR("service: http request failed");
-        return -1;
+        SVC_LOG_ERROR("Provider %s failed for model %s", prov->name, config->model);
+        free(cache_key);
+        return ret;
     }
 
-    if (http_code != 200) {
-        char* err = p->ops->extract_error(p->ctx, resp->data);
-        AGENTOS_LOG_ERROR("service: provider returned %ld: %s", http_code, err ? err : "unknown");
-        free(err);
-        provider_http_buffer_free(resp);
-        return -1;
+    /* 更新成本 */
+    cost_tracker_add(svc->cost, config->model,
+                     resp->prompt_tokens, resp->completion_tokens);
+
+    /* 存入缓存 */
+    char* resp_json = response_to_json(resp);
+    if (resp_json) {
+        cache_put(svc->cache, cache_key, resp_json);
+        free(resp_json);
     }
 
-    // 解析响应
-    ret = p->ops->parse_response(p->ctx, resp->data, out_response);
-    provider_http_buffer_free(resp);
-    if (ret != 0) {
-        AGENTOS_LOG_ERROR("service: failed to parse response");
-        return -1;
-    }
-
-    // 更新成本跟踪
-    llm_response_t* r = *out_response;
-    cost_tracker_add(svc->cost_tracker, config->model, r->prompt_tokens, r->completion_tokens);
-
+    *out_response = resp;
+    free(cache_key);
     return 0;
 }
 
+/* ---------- 流式完成 ---------- */
 int llm_service_complete_stream(llm_service_t* svc,
                                 const llm_request_config_t* config,
                                 llm_stream_callback_t callback,
                                 llm_response_t** out_response) {
-    // 流式实现需要保持连接并逐步解析，较复杂，此处省略
-    AGENTOS_LOG_ERROR("service: streaming not implemented yet");
-    return -1;
-}
+    if (!svc || !config || !callback) return ERR_INVALID_ARG;
 
-void llm_response_free(llm_response_t* resp) {
-    if (!resp) return;
-    free(resp->id);
-    free(resp->model);
-    for (size_t i = 0; i < resp->choice_count; i++) {
-        free(resp->choices[i].role);
-        free(resp->choices[i].content);
+    pthread_mutex_lock(&svc->lock);
+    const provider_t* prov = provider_registry_find(svc->registry, config->model);
+    pthread_mutex_unlock(&svc->lock);
+    if (!prov) {
+        SVC_LOG_ERROR("No provider for model %s", config->model);
+        return ERR_NOT_FOUND;
     }
-    free(resp->choices);
-    free(resp->finish_reason);
-    free(resp);
+
+    int ret = prov->ops->complete_stream(prov->ctx, config, callback, out_response);
+    if (ret == 0 && out_response && *out_response) {
+        llm_response_t* resp = *out_response;
+        cost_tracker_add(svc->cost, config->model,
+                         resp->prompt_tokens, resp->completion_tokens);
+    }
+    return ret;
 }
 
+/* ---------- 统计 ---------- */
 int llm_service_stats(llm_service_t* svc, char** out_json) {
-    if (!svc || !out_json) return -1;
-    // 生成统计 JSON
+    if (!svc || !out_json) return ERR_INVALID_ARG;
     cJSON* root = cJSON_CreateObject();
-    cJSON_AddItemToObject(root, "cost", cost_tracker_export(svc->cost_tracker));
+    cJSON* cost_json = cost_tracker_export(svc->cost);
+    if (cost_json) cJSON_AddItemToObject(root, "cost", cost_json);
     char* json = cJSON_PrintUnformatted(root);
     cJSON_Delete(root);
-    if (!json) return -1;
+    if (!json) return ERR_NOMEM;
     *out_json = json;
     return 0;
 }
