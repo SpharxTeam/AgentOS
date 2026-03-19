@@ -1,43 +1,64 @@
 /**
  * @file anthropic.c
- * @brief Anthropic 适配器
+ * @brief Anthropic 适配器实现
  * @copyright (c) 2026 SPHARX. All Rights Reserved.
  */
 
 #include "provider.h"
-#include "logger.h"
+#include "svc_http.h"
+#include "svc_logger.h"
+#include "svc_error.h"
 #include <stdlib.h>
 #include <string.h>
-#include <errno.h>
+#include <stdio.h>
 
-typedef struct anthropic_ctx {
+typedef struct {
     char api_key[512];
     char api_base[512];
-    char version[64];
     double timeout_sec;
     int max_retries;
-    char** models;
-    size_t model_count;
 } anthropic_ctx_t;
 
-/* 构建 Anthropic 请求体 */
-static char* build_anthropic_request(const llm_request_config_t* cfg) {
-    cJSON* root = cJSON_CreateObject();
-    cJSON_AddStringToObject(root, "model", cfg->model);
-    cJSON_AddNumberToObject(root, "temperature", cfg->temperature);
-    if (cfg->max_tokens > 0) cJSON_AddNumberToObject(root, "max_tokens", cfg->max_tokens);
-    if (cfg->stream) cJSON_AddBoolToObject(root, "stream", cfg->stream);
+/* ---------- 生命周期 ---------- */
+static provider_ctx_t* anthropic_init(const char* name, const char* api_key,
+                                       const char* api_base, const char* organization,
+                                       double timeout_sec, int max_retries) {
+    (void)name; (void)organization;
+    anthropic_ctx_t* ctx = calloc(1, sizeof(anthropic_ctx_t));
+    if (!ctx) return NULL;
+    strncpy(ctx->api_key, api_key, sizeof(ctx->api_key) - 1);
+    if (api_base)
+        strncpy(ctx->api_base, api_base, sizeof(ctx->api_base) - 1);
+    else
+        strcpy(ctx->api_base, "https://api.anthropic.com/v1");
+    ctx->timeout_sec = timeout_sec > 0 ? timeout_sec : 30.0;
+    ctx->max_retries = max_retries;
+    return (provider_ctx_t*)ctx;
+}
 
-    // 分离 system 消息
+static void anthropic_destroy(provider_ctx_t* ctx_ptr) {
+    free(ctx_ptr);
+}
+
+/* ---------- 构建请求体 ---------- */
+static char* build_request(const llm_request_config_t* config) {
+    cJSON* root = cJSON_CreateObject();
+    if (!root) return NULL;
+
+    cJSON_AddStringToObject(root, "model", config->model);
+    cJSON_AddNumberToObject(root, "temperature", config->temperature);
+    if (config->max_tokens > 0) cJSON_AddNumberToObject(root, "max_tokens", config->max_tokens);
+    if (config->stream) cJSON_AddBoolToObject(root, "stream", config->stream);
+
     char* system = NULL;
     cJSON* messages = cJSON_CreateArray();
-    for (size_t i = 0; i < cfg->message_count; i++) {
-        if (strcmp(cfg->messages[i].role, "system") == 0) {
-            system = strdup(cfg->messages[i].content);
+    for (size_t i = 0; i < config->message_count; ++i) {
+        if (strcmp(config->messages[i].role, "system") == 0) {
+            system = strdup(config->messages[i].content);
         } else {
             cJSON* msg = cJSON_CreateObject();
-            cJSON_AddStringToObject(msg, "role", cfg->messages[i].role);
-            cJSON_AddStringToObject(msg, "content", cfg->messages[i].content);
+            cJSON_AddStringToObject(msg, "role", config->messages[i].role);
+            cJSON_AddStringToObject(msg, "content", config->messages[i].content);
             cJSON_AddItemToArray(messages, msg);
         }
     }
@@ -52,15 +73,15 @@ static char* build_anthropic_request(const llm_request_config_t* cfg) {
     return json;
 }
 
-/* 解析 Anthropic 响应 */
-static int parse_anthropic_response(const char* body, llm_response_t** out) {
+/* ---------- 解析非流式响应 ---------- */
+static int parse_response(const char* body, llm_response_t** out) {
     cJSON* root = cJSON_Parse(body);
-    if (!root) return -1;
+    if (!root) return ERR_HTTP;
 
     llm_response_t* resp = calloc(1, sizeof(llm_response_t));
     if (!resp) {
         cJSON_Delete(root);
-        return -1;
+        return ERR_NOMEM;
     }
 
     cJSON* id = cJSON_GetObjectItem(root, "id");
@@ -69,27 +90,24 @@ static int parse_anthropic_response(const char* body, llm_response_t** out) {
     cJSON* model = cJSON_GetObjectItem(root, "model");
     if (cJSON_IsString(model)) resp->model = strdup(model->valuestring);
 
-    // 提取内容
-    cJSON* content_arr = cJSON_GetObjectItem(root, "content");
-    if (cJSON_IsArray(content_arr) && cJSON_GetArraySize(content_arr) > 0) {
-        cJSON* first = cJSON_GetArrayItem(content_arr, 0);
+    cJSON* content = cJSON_GetObjectItem(root, "content");
+    if (cJSON_IsArray(content) && cJSON_GetArraySize(content) > 0) {
+        cJSON* first = cJSON_GetArrayItem(content, 0);
         cJSON* text = cJSON_GetObjectItem(first, "text");
         if (cJSON_IsString(text)) {
             resp->choice_count = 1;
             resp->choices = calloc(1, sizeof(llm_message_t));
-            if (resp->choices) {
-                ((char**)&resp->choices[0].role)[0] = strdup("assistant");
-                ((char**)&resp->choices[0].content)[0] = strdup(text->valuestring);
-            }
+            resp->choices[0].role = strdup("assistant");
+            resp->choices[0].content = strdup(text->valuestring);
         }
     }
 
     cJSON* usage = cJSON_GetObjectItem(root, "usage");
     if (usage) {
-        cJSON* in_tokens = cJSON_GetObjectItem(usage, "input_tokens");
-        cJSON* out_tokens = cJSON_GetObjectItem(usage, "output_tokens");
-        if (cJSON_IsNumber(in_tokens)) resp->prompt_tokens = (uint32_t)in_tokens->valuedouble;
-        if (cJSON_IsNumber(out_tokens)) resp->completion_tokens = (uint32_t)out_tokens->valuedouble;
+        cJSON* input = cJSON_GetObjectItem(usage, "input_tokens");
+        cJSON* output = cJSON_GetObjectItem(usage, "output_tokens");
+        if (cJSON_IsNumber(input)) resp->prompt_tokens = (uint32_t)input->valuedouble;
+        if (cJSON_IsNumber(output)) resp->completion_tokens = (uint32_t)output->valuedouble;
         resp->total_tokens = resp->prompt_tokens + resp->completion_tokens;
     }
 
@@ -98,34 +116,24 @@ static int parse_anthropic_response(const char* body, llm_response_t** out) {
     return 0;
 }
 
-/* 流式处理 */
-typedef struct anthropic_stream_ctx {
-    llm_stream_callback_t cb;
+/* ---------- 流式写回调 ---------- */
+typedef struct {
+    llm_stream_callback_t user_cb;
     void* user_data;
-    char* buffer;
-    size_t buf_size;
-} anthropic_stream_ctx_t;
+} stream_adapter_t;
 
-static size_t anthropic_stream_write(void* contents, size_t size, size_t nmemb, void* userp) {
-    anthropic_stream_ctx_t* sctx = userp;
+static size_t stream_write(void* contents, size_t size, size_t nmemb, void* userp) {
+    stream_adapter_t* ad = (stream_adapter_t*)userp;
     size_t realsize = size * nmemb;
+    char* data = (char*)contents;
+    char* line = data;
+    char* end;
 
-    char* new_buf = realloc(sctx->buffer, sctx->buf_size + realsize + 1);
-    if (!new_buf) return 0;
-    sctx->buffer = new_buf;
-    memcpy(sctx->buffer + sctx->buf_size, contents, realsize);
-    sctx->buf_size += realsize;
-    sctx->buffer[sctx->buf_size] = '\0';
+    while ((end = memchr(line, '\n', realsize - (line - data))) != NULL) {
+        size_t len = end - line;
+        char saved = line[len];
+        line[len] = '\0';
 
-    char* line_start = sctx->buffer;
-    char* p;
-    while ((p = strstr(line_start, "\n")) != NULL) {
-        *p = '\0';
-        char* line = line_start;
-        if (strlen(line) == 0) {
-            line_start = p + 1;
-            continue;
-        }
         if (strncmp(line, "data: ", 6) == 0) {
             char* json_str = line + 6;
             cJSON* root = cJSON_Parse(json_str);
@@ -138,195 +146,100 @@ static size_t anthropic_stream_write(void* contents, size_t size, size_t nmemb, 
                     if (delta) {
                         cJSON* text = cJSON_GetObjectItem(delta, "text");
                         if (cJSON_IsString(text) && text->valuestring) {
-                            sctx->cb(text->valuestring, sctx->user_data);
+                            ad->user_cb(text->valuestring, ad->user_data);
                         }
                     }
                 }
                 cJSON_Delete(root);
             }
         }
-        line_start = p + 1;
-    }
-
-    if (line_start > sctx->buffer) {
-        size_t remaining = sctx->buf_size - (line_start - sctx->buffer);
-        memmove(sctx->buffer, line_start, remaining);
-        sctx->buf_size = remaining;
-        sctx->buffer[remaining] = '\0';
+        line[len] = saved;
+        line = end + 1;
     }
     return realsize;
 }
 
-static void* anthropic_init(const provider_config_t* cfg) {
-    if (!cfg || !cfg->api_key) {
-        errno = EINVAL;
-        return NULL;
-    }
-    anthropic_ctx_t* ctx = calloc(1, sizeof(anthropic_ctx_t));
-    if (!ctx) return NULL;
-
-    strncpy(ctx->api_key, cfg->api_key, sizeof(ctx->api_key)-1);
-    if (cfg->api_base) {
-        strncpy(ctx->api_base, cfg->api_base, sizeof(ctx->api_base)-1);
-    } else {
-        snprintf(ctx->api_base, sizeof(ctx->api_base), "https://api.anthropic.com/v1");
-    }
-    snprintf(ctx->version, sizeof(ctx->version), "2023-06-01");
-    ctx->timeout_sec = cfg->timeout_sec > 0 ? cfg->timeout_sec : 30.0;
-    ctx->max_retries = cfg->max_retries > 0 ? cfg->max_retries : 3;
-
-    if (cfg->models && cfg->model_count > 0) {
-        ctx->models = calloc(cfg->model_count + 1, sizeof(char*));
-        if (!ctx->models) {
-            free(ctx);
-            return NULL;
-        }
-        for (size_t i = 0; i < cfg->model_count; i++) {
-            ctx->models[i] = strdup(cfg->models[i]);
-            if (!ctx->models[i]) {
-                for (size_t j = 0; j < i; j++) free(ctx->models[j]);
-                free(ctx->models);
-                free(ctx);
-                return NULL;
-            }
-        }
-        ctx->model_count = cfg->model_count;
-    }
-    return ctx;
-}
-
-static void anthropic_destroy(void* vctx) {
-    anthropic_ctx_t* ctx = vctx;
-    if (!ctx) return;
-    if (ctx->models) {
-        for (size_t i = 0; i < ctx->model_count; i++) free(ctx->models[i]);
-        free(ctx->models);
-    }
-    free(ctx);
-}
-
-static int anthropic_complete(void* vctx,
+/* ---------- 同步完成 ---------- */
+static int anthropic_complete(provider_ctx_t* ctx_ptr,
                               const llm_request_config_t* config,
-                              llm_response_t** out) {
-    anthropic_ctx_t* ctx = vctx;
-    if (!ctx || !config || !out) {
-        errno = EINVAL;
-        return -1;
-    }
-
-    char* body = build_anthropic_request(config);
-    if (!body) return -1;
+                              llm_response_t** out_response) {
+    anthropic_ctx_t* ctx = (anthropic_ctx_t*)ctx_ptr;
+    char* req_body = build_request(config);
+    if (!req_body) return ERR_NOMEM;
 
     char url[1024];
     snprintf(url, sizeof(url), "%s/messages", ctx->api_base);
 
-    struct curl_slist* headers = NULL;
-    headers = curl_slist_append(headers, "Content-Type: application/json");
-    headers = curl_slist_append(headers, "anthropic-version: 2023-06-01");
-    char auth_hdr[512];
-    snprintf(auth_hdr, sizeof(auth_hdr), "x-api-key: %s", ctx->api_key);
-    headers = curl_slist_append(headers, auth_hdr);
-
-    http_buffer_t* resp_buf = NULL;
-    long http_code = 0;
-    int ret = provider_http_post(url, headers, body,
-                                 ctx->timeout_sec, ctx->max_retries,
-                                 &resp_buf, &http_code);
-    curl_slist_free_all(headers);
-    free(body);
-
-    if (ret != 0) {
-        AGENTOS_LOG_ERROR("anthropic: HTTP request failed");
-        return -1;
+    http_headers_t* headers = http_headers_new();
+    if (!headers) {
+        free(req_body);
+        return ERR_NOMEM;
     }
+    http_headers_add(headers, "Content-Type: application/json");
+    http_headers_add(headers, "anthropic-version: 2023-06-01");
+    char auth[512];
+    snprintf(auth, sizeof(auth), "x-api-key: %s", ctx->api_key);
+    http_headers_add(headers, auth);
 
-    if (http_code != 200) {
-        AGENTOS_LOG_ERROR("anthropic: HTTP error %ld", http_code);
-        provider_http_buffer_free(resp_buf);
-        return -1;
+    http_response_t* resp = http_post(url, headers, req_body, ctx->timeout_sec);
+    http_headers_free(headers);
+    free(req_body);
+
+    if (!resp) return ERR_HTTP;
+    if (resp->status_code != 200) {
+        http_response_free(resp);
+        return ERR_HTTP;
     }
-
-    ret = parse_anthropic_response(resp_buf->data, out);
-    provider_http_buffer_free(resp_buf);
+    int ret = parse_response(resp->body, out_response);
+    http_response_free(resp);
     return ret;
 }
 
-static int anthropic_complete_stream(void* vctx,
+/* ---------- 流式完成 ---------- */
+static int anthropic_complete_stream(provider_ctx_t* ctx_ptr,
                                      const llm_request_config_t* config,
-                                     llm_stream_callback_t cb,
-                                     llm_response_t** out) {
-    anthropic_ctx_t* ctx = vctx;
-    if (!ctx || !config || !cb) {
-        errno = EINVAL;
-        return -1;
-    }
-
+                                     llm_stream_callback_t callback,
+                                     llm_response_t** out_response) {
+    anthropic_ctx_t* ctx = (anthropic_ctx_t*)ctx_ptr;
     llm_request_config_t stream_cfg = *config;
     stream_cfg.stream = 1;
-    char* body = build_anthropic_request(&stream_cfg);
-    if (!body) return -1;
+    char* req_body = build_request(&stream_cfg);
+    if (!req_body) return ERR_NOMEM;
 
     char url[1024];
     snprintf(url, sizeof(url), "%s/messages", ctx->api_base);
 
-    struct curl_slist* headers = NULL;
-    headers = curl_slist_append(headers, "Content-Type: application/json");
-    headers = curl_slist_append(headers, "anthropic-version: 2023-06-01");
-    char auth_hdr[512];
-    snprintf(auth_hdr, sizeof(auth_hdr), "x-api-key: %s", ctx->api_key);
-    headers = curl_slist_append(headers, auth_hdr);
-
-    CURL* curl = curl_easy_init();
-    if (!curl) {
-        curl_slist_free_all(headers);
-        free(body);
-        return -1;
+    http_headers_t* headers = http_headers_new();
+    if (!headers) {
+        free(req_body);
+        return ERR_NOMEM;
     }
+    http_headers_add(headers, "Content-Type: application/json");
+    http_headers_add(headers, "anthropic-version: 2023-06-01");
+    char auth[512];
+    snprintf(auth, sizeof(auth), "x-api-key: %s", ctx->api_key);
+    http_headers_add(headers, auth);
 
-    anthropic_stream_ctx_t sctx = {0};
-    sctx.cb = cb;
-    sctx.user_data = config->user_data;
+    stream_adapter_t ad = {callback, config->user_data};
+    http_response_t* resp = http_post_stream(url, headers, req_body, ctx->timeout_sec,
+                                              stream_write, &ad);
+    http_headers_free(headers);
+    free(req_body);
 
-    curl_easy_setopt(curl, CURLOPT_URL, url);
-    curl_easy_setopt(curl, CURLOPT_POST, 1L);
-    curl_easy_setopt(curl, CURLOPT_POSTFIELDS, body);
-    curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
-    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, anthropic_stream_write);
-    curl_easy_setopt(curl, CURLOPT_WRITEDATA, &sctx);
-    curl_easy_setopt(curl, CURLOPT_TIMEOUT, (long)ctx->timeout_sec);
-    curl_easy_setopt(curl, CURLOPT_NOSIGNAL, 1L);
-
-    CURLcode res = curl_easy_perform(curl);
-    long http_code = 0;
-    curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &http_code);
-
-    curl_easy_cleanup(curl);
-    curl_slist_free_all(headers);
-    free(body);
-
-    if (res != CURLE_OK) {
-        AGENTOS_LOG_ERROR("anthropic: stream HTTP request failed: %s", curl_easy_strerror(res));
-        free(sctx.buffer);
-        return -1;
+    if (!resp) return ERR_HTTP;
+    if (resp->status_code != 200) {
+        http_response_free(resp);
+        return ERR_HTTP;
     }
-    if (http_code != 200) {
-        AGENTOS_LOG_ERROR("anthropic: stream HTTP error %ld", http_code);
-        free(sctx.buffer);
-        return -1;
-    }
-
-    if (out) *out = NULL;
-    free(sctx.buffer);
+    if (out_response) *out_response = NULL;
+    http_response_free(resp);
     return 0;
 }
 
-static const provider_ops_t anthropic_ops = {
+/* ---------- 操作表 ---------- */
+const provider_ops_t anthropic_ops = {
     .init = anthropic_init,
     .destroy = anthropic_destroy,
     .complete = anthropic_complete,
-    .complete_stream = anthropic_complete_stream,
+    .complete_stream = anthropic_complete_stream
 };
-
-const provider_ops_t* provider_get_anthropic_ops(void) {
-    return &anthropic_ops;
-}

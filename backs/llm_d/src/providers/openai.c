@@ -1,278 +1,285 @@
 /**
  * @file openai.c
- * @brief OpenAI 提供商适配器
+ * @brief OpenAI 适配器实现
  * @copyright (c) 2026 SPHARX. All Rights Reserved.
  */
 
 #include "provider.h"
-#include "logger.h"
+#include "svc_http.h"
+#include "svc_logger.h"
+#include "svc_error.h"
 #include <stdlib.h>
 #include <string.h>
-#include <errno.h>
+#include <stdio.h>
 
-typedef struct openai_ctx {
-    char api_key[256];
-    char api_base[256];
-    char organization[128];
+/* ---------- 上下文 ---------- */
+typedef struct {
+    char api_key[512];
+    char api_base[512];
+    char organization[256];
     double timeout_sec;
     int max_retries;
-    char** models;
-    size_t model_count;
 } openai_ctx_t;
 
-static void* openai_init(const provider_config_t* cfg) {
-    if (!cfg || !cfg->api_key) {
-        errno = EINVAL;
-        return NULL;
-    }
-
+/* ---------- 生命周期 ---------- */
+static provider_ctx_t* openai_init(const char* name, const char* api_key,
+                                    const char* api_base, const char* organization,
+                                    double timeout_sec, int max_retries) {
+    (void)name;
     openai_ctx_t* ctx = calloc(1, sizeof(openai_ctx_t));
     if (!ctx) return NULL;
 
-    strncpy(ctx->api_key, cfg->api_key, sizeof(ctx->api_key)-1);
-    if (cfg->api_base) {
-        strncpy(ctx->api_base, cfg->api_base, sizeof(ctx->api_base)-1);
-    } else {
-        snprintf(ctx->api_base, sizeof(ctx->api_base), "https://api.openai.com/v1");
-    }
-    if (cfg->organization) {
-        strncpy(ctx->organization, cfg->organization, sizeof(ctx->organization)-1);
-    }
-    ctx->timeout_sec = cfg->timeout_sec > 0 ? cfg->timeout_sec : 30.0;
-    ctx->max_retries = cfg->max_retries > 0 ? cfg->max_retries : 3;
+    strncpy(ctx->api_key, api_key, sizeof(ctx->api_key) - 1);
+    if (api_base)
+        strncpy(ctx->api_base, api_base, sizeof(ctx->api_base) - 1);
+    else
+        strcpy(ctx->api_base, "https://api.openai.com/v1");
+    if (organization)
+        strncpy(ctx->organization, organization, sizeof(ctx->organization) - 1);
+    ctx->timeout_sec = timeout_sec > 0 ? timeout_sec : 30.0;
+    ctx->max_retries = max_retries;
+    return (provider_ctx_t*)ctx;
+}
 
-    if (cfg->models && cfg->model_count > 0) {
-        ctx->models = calloc(cfg->model_count + 1, sizeof(char*));
-        if (!ctx->models) {
-            free(ctx);
-            return NULL;
-        }
-        for (size_t i = 0; i < cfg->model_count; i++) {
-            ctx->models[i] = strdup(cfg->models[i]);
-            if (!ctx->models[i]) {
-                for (size_t j = 0; j < i; j++) free(ctx->models[j]);
-                free(ctx->models);
-                free(ctx);
-                return NULL;
+static void openai_destroy(provider_ctx_t* ctx_ptr) {
+    free(ctx_ptr);
+}
+
+/* ---------- 构建请求体 ---------- */
+static char* build_request(const llm_request_config_t* config) {
+    cJSON* root = cJSON_CreateObject();
+    if (!root) return NULL;
+
+    cJSON_AddStringToObject(root, "model", config->model);
+    cJSON_AddNumberToObject(root, "temperature", config->temperature);
+    if (config->top_p > 0) cJSON_AddNumberToObject(root, "top_p", config->top_p);
+    if (config->max_tokens > 0) cJSON_AddNumberToObject(root, "max_tokens", config->max_tokens);
+    if (config->stream) cJSON_AddBoolToObject(root, "stream", config->stream);
+    if (config->presence_penalty != 0)
+        cJSON_AddNumberToObject(root, "presence_penalty", config->presence_penalty);
+    if (config->frequency_penalty != 0)
+        cJSON_AddNumberToObject(root, "frequency_penalty", config->frequency_penalty);
+
+    if (config->stop_count > 0) {
+        cJSON* stop = cJSON_CreateArray();
+        for (size_t i = 0; i < config->stop_count; ++i)
+            cJSON_AddItemToArray(stop, cJSON_CreateString(config->stop[i]));
+        cJSON_AddItemToObject(root, "stop", stop);
+    }
+
+    cJSON* msgs = cJSON_CreateArray();
+    for (size_t i = 0; i < config->message_count; ++i) {
+        cJSON* msg = cJSON_CreateObject();
+        cJSON_AddStringToObject(msg, "role", config->messages[i].role);
+        cJSON_AddStringToObject(msg, "content", config->messages[i].content);
+        cJSON_AddItemToArray(msgs, msg);
+    }
+    cJSON_AddItemToObject(root, "messages", msgs);
+
+    char* json = cJSON_PrintUnformatted(root);
+    cJSON_Delete(root);
+    return json;
+}
+
+/* ---------- 解析非流式响应 ---------- */
+static int parse_response(const char* body, llm_response_t** out) {
+    cJSON* root = cJSON_Parse(body);
+    if (!root) return ERR_HTTP;
+
+    llm_response_t* resp = calloc(1, sizeof(llm_response_t));
+    if (!resp) {
+        cJSON_Delete(root);
+        return ERR_NOMEM;
+    }
+
+    cJSON* id = cJSON_GetObjectItem(root, "id");
+    if (cJSON_IsString(id)) resp->id = strdup(id->valuestring);
+
+    cJSON* model = cJSON_GetObjectItem(root, "model");
+    if (cJSON_IsString(model)) resp->model = strdup(model->valuestring);
+
+    cJSON* created = cJSON_GetObjectItem(root, "created");
+    if (cJSON_IsNumber(created)) resp->created = (uint64_t)created->valuedouble;
+
+    cJSON* choices = cJSON_GetObjectItem(root, "choices");
+    if (cJSON_IsArray(choices)) {
+        resp->choice_count = cJSON_GetArraySize(choices);
+        resp->choices = calloc(resp->choice_count, sizeof(llm_message_t));
+        for (size_t i = 0; i < resp->choice_count; ++i) {
+            cJSON* choice = cJSON_GetArrayItem(choices, i);
+            cJSON* message = cJSON_GetObjectItem(choice, "message");
+            if (message) {
+                cJSON* role = cJSON_GetObjectItem(message, "role");
+                cJSON* content = cJSON_GetObjectItem(message, "content");
+                if (cJSON_IsString(role))
+                    resp->choices[i].role = strdup(role->valuestring);
+                if (cJSON_IsString(content))
+                    resp->choices[i].content = strdup(content->valuestring);
             }
+            cJSON* finish = cJSON_GetObjectItem(choice, "finish_reason");
+            if (cJSON_IsString(finish) && !resp->finish_reason)
+                resp->finish_reason = strdup(finish->valuestring);
         }
-        ctx->model_count = cfg->model_count;
     }
-    return ctx;
+
+    cJSON* usage = cJSON_GetObjectItem(root, "usage");
+    if (usage) {
+        cJSON* prompt = cJSON_GetObjectItem(usage, "prompt_tokens");
+        cJSON* completion = cJSON_GetObjectItem(usage, "completion_tokens");
+        cJSON* total = cJSON_GetObjectItem(usage, "total_tokens");
+        if (cJSON_IsNumber(prompt)) resp->prompt_tokens = (uint32_t)prompt->valuedouble;
+        if (cJSON_IsNumber(completion)) resp->completion_tokens = (uint32_t)completion->valuedouble;
+        if (cJSON_IsNumber(total)) resp->total_tokens = (uint32_t)total->valuedouble;
+    }
+
+    cJSON_Delete(root);
+    *out = resp;
+    return 0;
 }
 
-static void openai_destroy(void* vctx) {
-    openai_ctx_t* ctx = vctx;
-    if (!ctx) return;
-    if (ctx->models) {
-        for (size_t i = 0; i < ctx->model_count; i++) free(ctx->models[i]);
-        free(ctx->models);
-    }
-    free(ctx);
-}
-
-static int openai_complete(void* vctx,
-                           const llm_request_config_t* config,
-                           llm_response_t** out) {
-    openai_ctx_t* ctx = vctx;
-    if (!ctx || !config || !out) {
-        errno = EINVAL;
-        return -1;
-    }
-
-    char* body = provider_build_openai_request(config);
-    if (!body) return -1;
-
-    char url[1024];
-    snprintf(url, sizeof(url), "%s/chat/completions", ctx->api_base);
-
-    struct curl_slist* headers = NULL;
-    headers = curl_slist_append(headers, "Content-Type: application/json");
-    char auth_hdr[512];
-    snprintf(auth_hdr, sizeof(auth_hdr), "Authorization: Bearer %s", ctx->api_key);
-    headers = curl_slist_append(headers, auth_hdr);
-    if (ctx->organization[0]) {
-        char org_hdr[512];
-        snprintf(org_hdr, sizeof(org_hdr), "OpenAI-Organization: %s", ctx->organization);
-        headers = curl_slist_append(headers, org_hdr);
-    }
-
-    http_buffer_t* resp_buf = NULL;
-    long http_code = 0;
-    int ret = provider_http_post(url, headers, body,
-                                 ctx->timeout_sec, ctx->max_retries,
-                                 &resp_buf, &http_code);
-    curl_slist_free_all(headers);
-    free(body);
-
-    if (ret != 0) {
-        AGENTOS_LOG_ERROR("openai: HTTP request failed");
-        return -1;
-    }
-
-    if (http_code != 200) {
-        char* err_msg = provider_extract_openai_error(resp_buf->data);
-        AGENTOS_LOG_ERROR("openai: HTTP %ld: %s", http_code, err_msg ? err_msg : "unknown");
-        free(err_msg);
-        provider_http_buffer_free(resp_buf);
-        errno = EIO;
-        return -1;
-    }
-
-    ret = provider_parse_openai_response(resp_buf->data, out);
-    provider_http_buffer_free(resp_buf);
-    return ret;
-}
-
-/* ---------- 流式实现 ---------- */
-typedef struct stream_ctx {
-    llm_stream_callback_t cb;
+/* ---------- 流式写回调 ---------- */
+typedef struct {
+    llm_stream_callback_t user_cb;
     void* user_data;
-    char* buffer;
-    size_t buf_size;
-} stream_ctx_t;
+} stream_adapter_t;
 
-static size_t stream_write_cb(void* contents, size_t size, size_t nmemb, void* userp) {
-    stream_ctx_t* sctx = userp;
+static size_t stream_write(void* contents, size_t size, size_t nmemb, void* userp) {
+    stream_adapter_t* ad = (stream_adapter_t*)userp;
     size_t realsize = size * nmemb;
-    char* data = contents;
+    char* data = (char*)contents;
+    char* line = data;
+    char* end;
 
-    char* new_buf = realloc(sctx->buffer, sctx->buf_size + realsize + 1);
-    if (!new_buf) return 0;
-    sctx->buffer = new_buf;
-    memcpy(sctx->buffer + sctx->buf_size, data, realsize);
-    sctx->buf_size += realsize;
-    sctx->buffer[sctx->buf_size] = '\0';
-
-    // 按行分割处理
-    char* line_start = sctx->buffer;
-    char* p;
-    while ((p = strstr(line_start, "\n")) != NULL) {
-        *p = '\0';
-        char* line = line_start;
-
-        if (strlen(line) == 0) {
-            line_start = p + 1;
-            continue;
-        }
+    while ((end = memchr(line, '\n', realsize - (line - data))) != NULL) {
+        size_t len = end - line;
+        char saved = line[len];
+        line[len] = '\0';
 
         if (strncmp(line, "data: ", 6) == 0) {
             char* json_str = line + 6;
-            if (strcmp(json_str, "[DONE]") == 0) {
-                line_start = p + 1;
-                continue;
-            }
-            cJSON* root = cJSON_Parse(json_str);
-            if (root) {
-                cJSON* choices = cJSON_GetObjectItem(root, "choices");
-                if (cJSON_IsArray(choices) && cJSON_GetArraySize(choices) > 0) {
-                    cJSON* choice = cJSON_GetArrayItem(choices, 0);
-                    cJSON* delta = cJSON_GetObjectItem(choice, "delta");
-                    if (delta) {
-                        cJSON* content = cJSON_GetObjectItem(delta, "content");
-                        if (cJSON_IsString(content) && content->valuestring) {
-                            sctx->cb(content->valuestring, sctx->user_data);
+            if (strcmp(json_str, "[DONE]") != 0) {
+                cJSON* root = cJSON_Parse(json_str);
+                if (root) {
+                    cJSON* choices = cJSON_GetObjectItem(root, "choices");
+                    if (cJSON_IsArray(choices) && cJSON_GetArraySize(choices) > 0) {
+                        cJSON* choice = cJSON_GetArrayItem(choices, 0);
+                        cJSON* delta = cJSON_GetObjectItem(choice, "delta");
+                        if (delta) {
+                            cJSON* content = cJSON_GetObjectItem(delta, "content");
+                            if (cJSON_IsString(content) && content->valuestring) {
+                                ad->user_cb(content->valuestring, ad->user_data);
+                            }
                         }
                     }
+                    cJSON_Delete(root);
                 }
-                cJSON_Delete(root);
             }
         }
-        line_start = p + 1;
-    }
-
-    // 将未处理完的部分移到缓冲区开头
-    if (line_start > sctx->buffer) {
-        size_t remaining = sctx->buf_size - (line_start - sctx->buffer);
-        memmove(sctx->buffer, line_start, remaining);
-        sctx->buf_size = remaining;
-        sctx->buffer[remaining] = '\0';
+        line[len] = saved;
+        line = end + 1;
     }
     return realsize;
 }
 
-static int openai_complete_stream(void* vctx,
-                                  const llm_request_config_t* config,
-                                  llm_stream_callback_t cb,
-                                  llm_response_t** out) {
-    openai_ctx_t* ctx = vctx;
-    if (!ctx || !config || !cb) {
-        errno = EINVAL;
-        return -1;
-    }
-
-    // 强制启用流式
-    llm_request_config_t stream_cfg = *config;
-    stream_cfg.stream = 1;
-    char* body = provider_build_openai_request(&stream_cfg);
-    if (!body) return -1;
+/* ---------- 同步完成 ---------- */
+static int openai_complete(provider_ctx_t* ctx_ptr,
+                           const llm_request_config_t* config,
+                           llm_response_t** out_response) {
+    openai_ctx_t* ctx = (openai_ctx_t*)ctx_ptr;
+    char* req_body = build_request(config);
+    if (!req_body) return ERR_NOMEM;
 
     char url[1024];
     snprintf(url, sizeof(url), "%s/chat/completions", ctx->api_base);
 
-    struct curl_slist* headers = NULL;
-    headers = curl_slist_append(headers, "Content-Type: application/json");
-    char auth_hdr[512];
-    snprintf(auth_hdr, sizeof(auth_hdr), "Authorization: Bearer %s", ctx->api_key);
-    headers = curl_slist_append(headers, auth_hdr);
+    http_headers_t* headers = http_headers_new();
+    if (!headers) {
+        free(req_body);
+        return ERR_NOMEM;
+    }
+    http_headers_add(headers, "Content-Type: application/json");
+    char auth[512];
+    snprintf(auth, sizeof(auth), "Authorization: Bearer %s", ctx->api_key);
+    http_headers_add(headers, auth);
     if (ctx->organization[0]) {
-        char org_hdr[512];
-        snprintf(org_hdr, sizeof(org_hdr), "OpenAI-Organization: %s", ctx->organization);
-        headers = curl_slist_append(headers, org_hdr);
+        snprintf(auth, sizeof(auth), "OpenAI-Organization: %s", ctx->organization);
+        http_headers_add(headers, auth);
     }
 
-    CURL* curl = curl_easy_init();
-    if (!curl) {
-        curl_slist_free_all(headers);
-        free(body);
-        AGENTOS_LOG_ERROR("openai: curl_easy_init failed");
-        return -1;
+    http_response_t* resp = http_post(url, headers, req_body, ctx->timeout_sec);
+    http_headers_free(headers);
+    free(req_body);
+
+    if (!resp) {
+        SVC_LOG_ERROR("openai: HTTP request failed");
+        return ERR_HTTP;
     }
 
-    stream_ctx_t sctx = {0};
-    sctx.cb = cb;
-    sctx.user_data = config->user_data;
-
-    curl_easy_setopt(curl, CURLOPT_URL, url);
-    curl_easy_setopt(curl, CURLOPT_POST, 1L);
-    curl_easy_setopt(curl, CURLOPT_POSTFIELDS, body);
-    curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
-    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, stream_write_cb);
-    curl_easy_setopt(curl, CURLOPT_WRITEDATA, &sctx);
-    curl_easy_setopt(curl, CURLOPT_TIMEOUT, (long)ctx->timeout_sec);
-    curl_easy_setopt(curl, CURLOPT_NOSIGNAL, 1L);
-
-    CURLcode res = curl_easy_perform(curl);
-    long http_code = 0;
-    curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &http_code);
-
-    curl_easy_cleanup(curl);
-    curl_slist_free_all(headers);
-    free(body);
-
-    if (res != CURLE_OK) {
-        AGENTOS_LOG_ERROR("openai: stream HTTP request failed: %s", curl_easy_strerror(res));
-        free(sctx.buffer);
-        return -1;
-    }
-    if (http_code != 200) {
-        AGENTOS_LOG_ERROR("openai: stream HTTP error %ld", http_code);
-        free(sctx.buffer);
-        return -1;
+    if (resp->status_code != 200) {
+        SVC_LOG_ERROR("openai: HTTP %ld", resp->status_code);
+        http_response_free(resp);
+        return ERR_HTTP;
     }
 
-    if (out) *out = NULL;  // 流式不返回最终响应
-    free(sctx.buffer);
+    int ret = parse_response(resp->body, out_response);
+    http_response_free(resp);
+    return ret;
+}
+
+/* ---------- 流式完成 ---------- */
+static int openai_complete_stream(provider_ctx_t* ctx_ptr,
+                                  const llm_request_config_t* config,
+                                  llm_stream_callback_t callback,
+                                  llm_response_t** out_response) {
+    openai_ctx_t* ctx = (openai_ctx_t*)ctx_ptr;
+    llm_request_config_t stream_cfg = *config;
+    stream_cfg.stream = 1;
+    char* req_body = build_request(&stream_cfg);
+    if (!req_body) return ERR_NOMEM;
+
+    char url[1024];
+    snprintf(url, sizeof(url), "%s/chat/completions", ctx->api_base);
+
+    http_headers_t* headers = http_headers_new();
+    if (!headers) {
+        free(req_body);
+        return ERR_NOMEM;
+    }
+    http_headers_add(headers, "Content-Type: application/json");
+    char auth[512];
+    snprintf(auth, sizeof(auth), "Authorization: Bearer %s", ctx->api_key);
+    http_headers_add(headers, auth);
+    if (ctx->organization[0]) {
+        snprintf(auth, sizeof(auth), "OpenAI-Organization: %s", ctx->organization);
+        http_headers_add(headers, auth);
+    }
+
+    stream_adapter_t ad = {callback, config->user_data};
+    http_response_t* resp = http_post_stream(url, headers, req_body, ctx->timeout_sec,
+                                              stream_write, &ad);
+    http_headers_free(headers);
+    free(req_body);
+
+    if (!resp) {
+        SVC_LOG_ERROR("openai: stream HTTP failed");
+        return ERR_HTTP;
+    }
+
+    if (resp->status_code != 200) {
+        SVC_LOG_ERROR("openai: stream HTTP %ld", resp->status_code);
+        http_response_free(resp);
+        return ERR_HTTP;
+    }
+
+    if (out_response) *out_response = NULL;
+    http_response_free(resp);
     return 0;
 }
 
-static const provider_ops_t openai_ops = {
+/* ---------- 操作表 ---------- */
+const provider_ops_t openai_ops = {
     .init = openai_init,
     .destroy = openai_destroy,
     .complete = openai_complete,
-    .complete_stream = openai_complete_stream,
+    .complete_stream = openai_complete_stream
 };
-
-const provider_ops_t* provider_get_openai_ops(void) {
-    return &openai_ops;
-}

@@ -506,9 +506,20 @@ logger.Info("Hello from Go")
 
 ---
 
-**最后更新**: 2026-03-18  
+**版本**: v1.0.0.3  
+**最后更新**: 2026-03-19  
 **维护者**: SPHARX Team  
 **相关文档**: 
 - [原子日志接口](atoms/utils/observability/include/logger.h)
 - [服务公共接口](backs/common/include/svc_common.h)
 - [日志配置示例](config/logging/logging.yaml)
+
+---
+
+<div align="center">
+
+**© 2026 SPHARX Ltd 版权所有**
+
+*From data intelligence emerges*
+
+</div>
