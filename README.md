@@ -11,14 +11,15 @@
 
 *"From data intelligence emerges. 始于数据，终于智能。"*
 
----
+--
 
-📖 **🇨🇳 简体中文** | [English](partdocs/readme/en/README.md) | [Français](partdocs/readme/fr/README.md) | [Deutsch](partdocs/readme/de/README.md)
+Language： **简体中文** | [English](partdocs/readme/en/README.md) | [Français](partdocs/readme/fr/README.md) | [Deutsch](partdocs/readme/de/README.md)
 
 </div>
 
----
-## 简介
+
+
+## 🚩简介
 
 - 可以工程化的完成任务，最大化拉满 token 使用效率；
 - 全新架构在 token 利用效率上领先当前行业主流框架 2-3 倍；
