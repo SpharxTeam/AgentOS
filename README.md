@@ -1,8 +1,8 @@
-# Agent OS
+﻿# Agent OS
 
 <div align="center">
 
-[![Version](https://img.shields.io/badge/version-1.0.0.3-blue.svg)](https://gitee.com/spharx/agentos)
+[![Version](https://img.shields.io/badge/version-1.0.0.5-blue.svg)](https://gitee.com/spharx/agentos)
 [![License](https://img.shields.io/badge/license-Apache--2.0-green.svg)](https://gitee.com/spharx/agentos/blob/main/LICENSE)
 [![Mirror](https://img.shields.io/badge/mirror-GitHub-lightgrey.svg)](https://github.com/SpharxTeam/AgentOS)
 
@@ -42,7 +42,7 @@ Language： **简体中文** | [English](partdocs/readme/en/README.md) | [Franç
 
 ### 版本状态
 
-**当前版本**: v1.0.0.3 (生产就绪)
+**当前版本**: v1.0.0.5 (生产就绪)
 - ✅ 核心架构设计完成
 - ✅ MemoryRovol 记忆卷载系统
   - L1-L4 四层架构全部实现
@@ -678,7 +678,7 @@ python scripts/benchmark.py
 
 ## 🔄 版本路线图
 
-### 当前版本 (v1.0.0.3) - 生产就绪
+### 当前版本 (v1.0.0.5) - 生产就绪
 
 **完成度**: 85%
 

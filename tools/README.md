@@ -1,6 +1,6 @@
-# AgentOS 多语言 SDK
+﻿# AgentOS 多语言 SDK
 
-**版本**: 1.0.0.3  
+**版本**: 1.0.0.5  
 **最后更新**: 2026-03-18  
 **许可证**: Apache License 2.0
 
@@ -336,3 +336,7 @@ let result = skill.execute(&params)?;
 ---
 
 **Apache License 2.0 © 2026 SPHARX. "From data intelligence emerges."**
+
+---
+
+© 2026 SPHARX Ltd. 保留所有权利。

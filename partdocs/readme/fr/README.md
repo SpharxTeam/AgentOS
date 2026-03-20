@@ -1,8 +1,8 @@
-# Agent OS
+﻿# Agent OS
 
 <div align="center">
 
-[![Version](https://img.shields.io/badge/version-1.0.0.3-blue.svg)](https://gitee.com/spharx/agentos)
+[![Version](https://img.shields.io/badge/version-1.0.0.5-blue.svg)](https://gitee.com/spharx/agentos)
 [![License](https://img.shields.io/badge/license-Apache--2.0-green.svg)](https://gitee.com/spharx/agentos/blob/main/LICENSE)
 [![Mirror](https://img.shields.io/badge/mirror-GitHub-lightgrey.svg)](https://github.com/SpharxTeam/AgentOS)
 
@@ -43,7 +43,7 @@
 
 ### État de la Version
 
-**Version Actuelle**: v1.0.0.3 (Prêt pour la Production)
+**Version Actuelle**: v1.0.0.5 (Prêt pour la Production)
 
 - ✅ Conception de l'architecture principale terminée
 - ✅ Système de Mémoire MemoryRovol
@@ -395,7 +395,7 @@ Note: Détails dans [scripts/benchmark.py](scripts/benchmark.py)
 
 ## 🔄 Feuille de Route
 
-### Version Actuelle (v1.0.0.3) - Prêt Production
+### Version Actuelle (v1.0.0.5) - Prêt Production
 
 **Avancement**: 85%
 

@@ -1,6 +1,6 @@
-# AgentOS 数据分区 (Partdata)
+﻿# AgentOS 数据分区 (Partdata)
 
-**版本**: 1.0.0.3  
+**版本**: 1.0.0.5  
 **最后更新**: 2026-03-18  
 
 ---
@@ -370,3 +370,7 @@ mv logs_2026_03.tar.gz archive/
 ---
 
 **Apache License 2.0 © 2026 SPHARX**
+
+---
+
+© 2026 SPHARX Ltd. 保留所有权利。

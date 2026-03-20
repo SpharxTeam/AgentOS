@@ -1,4 +1,4 @@
-# LLM 服务 (llm_d)
+﻿# LLM 服务 (llm_d)
 
 提供统一的大模型调用接口，支持多个供应商（OpenAI、Anthropic、DeepSeek、本地模型）以及缓存、成本跟踪和 Token 计数。
 
@@ -43,3 +43,7 @@ make
 - cJSON
 - libyaml
 - tiktoken
+
+---
+
+© 2026 SPHARX Ltd. 保留所有权利。

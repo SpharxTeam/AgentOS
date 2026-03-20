@@ -1,4 +1,4 @@
-# 支持与支持渠道 SUPPORT
+﻿# 支持与支持渠道 SUPPORT
 
 如果您在使用 AgentOS 过程中遇到问题或需要帮助，请参考以下支持渠道。
 
@@ -265,3 +265,7 @@
 官网：https://spharx.cn
 
 </div>
+
+---
+
+© 2026 SPHARX Ltd. 保留所有权利。

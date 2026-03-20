@@ -1,4 +1,4 @@
-# AgentOS C 语言编码规范 v1.0.1
+﻿# AgentOS C 语言编码规范 v1.0.1
 
 **版本**：1.0.1  
 **日期**：2026-03-20  
@@ -323,3 +323,7 @@ return result;
 
 维护者：LirenWang;ChenZhang;DechengLi
 最后更新：2026-03-20
+
+---
+
+© 2026 SPHARX Ltd. 保留所有权利。

@@ -1,7 +1,7 @@
-# MemoryRovol - AgentOS 记忆卷载核心模块
+﻿# MemoryRovol - AgentOS 记忆卷载核心模块
 
 **路径**: `atoms/memoryrovol/`  
-**版本**: 1.0.0.3  
+**版本**: 1.0.0.5  
 **最后更新**: 2026-03-18
 **许可证**: Apache License 2.0  
 
@@ -85,3 +85,7 @@ rov_init_from_json("../config/memory_config.json");
 ## 许可证
 
 Apache License 2.0 © 2026 SPHARX. "From data intelligence emerges."
+
+---
+
+© 2026 SPHARX Ltd. 保留所有权利。

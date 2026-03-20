@@ -255,6 +255,15 @@ static void handle_client(int client_fd) {
     }
     buffer[n] = '\0';
 
+    // 检查请求大小
+    if (n >= sizeof(buffer) - 1) {
+        char* err = build_error_response(INVALID_REQUEST, "Request too large", -1);
+        write(client_fd, err, strlen(err));
+        free(err);
+        close(client_fd);
+        return;
+    }
+
     cJSON* req = cJSON_Parse(buffer);
     if (!req) {
         char* err = build_error_response(PARSE_ERROR, "Parse error", -1);

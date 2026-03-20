@@ -1,4 +1,4 @@
-# AgentOS 多语言文档中心 / Multilingual Documentation Hub
+﻿# AgentOS 多语言文档中心 / Multilingual Documentation Hub
 
 本目录包含 AgentOS 项目的多语言版本文档。/ This directory contains multilingual versions of AgentOS project documentation.
 
@@ -132,10 +132,14 @@ Documentation improvement suggestions and translation contributions are welcome!
 
 **最后更新 / Last Updated**: 2026-03-19
 
-**版本号 / Version**: v1.0.0.3
+**版本号 / Version**: v1.0.0.5
 
 ---
 
 [返回主页 / Back to Home](../../README.md)
 
 </div>
+
+---
+
+© 2026 SPHARX Ltd. 保留所有权利。

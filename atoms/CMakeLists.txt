@@ -1,8 +1,8 @@
-# Copyright (c) 2026 SPHARX. All Rights Reserved. "From data intelligence emerges."
+﻿# Copyright (c) 2026 SPHARX. All Rights Reserved. "From data intelligence emerges."
 # AgentOS 内核顶层 CMakeLists.txt
 
 cmake_minimum_required(VERSION 3.20)
-project(agentos-kernel VERSION 1.0.0.3 LANGUAGES C CXX)
+project(agentos-kernel VERSION 1.0.0.5 LANGUAGES C CXX)
 
 # 设置默认构建类型
 if(NOT CMAKE_BUILD_TYPE)

@@ -1,6 +1,6 @@
-# CoreLoopThree：三层一体核心运行时架构详解
+﻿# CoreLoopThree：三层一体核心运行时架构详解
 
-**版本**: v1.0.0.3  
+**版本**: v1.0.0.5  
 **最后更新**: 2026-03-19  
 **路径**: `atoms/coreloopthree/`
 
@@ -541,7 +541,7 @@ void agentos_sys_init(void* cognition, void* execution, void* memory) {
 
 ---
 
-## 8. 实现状态 (v1.0.0.3)
+## 8. 实现状态 (v1.0.0.5)
 
 ### 8.1 已完成功能
 

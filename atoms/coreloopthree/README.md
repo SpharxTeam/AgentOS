@@ -1,6 +1,6 @@
-# CoreLoopThree：三层核心运行时
+﻿# CoreLoopThree：三层核心运行时
 
-**版本**: 1.0.0.3  
+**版本**: 1.0.0.5  
 **路径**: `atoms/coreloopthree/`  
 **最后更新**: 2026-03-18
 
@@ -52,3 +52,7 @@ mkdir build && cd build
 cmake ../atoms -DCMAKE_BUILD_TYPE=Release
 make
 ```
+
+---
+
+© 2026 SPHARX Ltd. 保留所有权利。

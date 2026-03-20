@@ -1,4 +1,4 @@
-# 致谢 ACKNOWLEDGMENTS
+﻿# 致谢 ACKNOWLEDGMENTS
 
 感谢所有帮助和支持 AgentOS 项目发展的个人、组织和开源项目。
 
@@ -285,3 +285,7 @@ AgentOS 还受益于众多其他开源项目，包括但不限于：
 *From data intelligence emerges*
 
 </div>
+
+---
+
+© 2026 SPHARX Ltd. 保留所有权利。

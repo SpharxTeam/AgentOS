@@ -1,4 +1,4 @@
-# 贡献指南 CONTRIBUTING GUIDE
+﻿# 贡献指南 CONTRIBUTING GUIDE
 
 感谢您对 AgentOS 项目感兴趣！我们欢迎各种形式的贡献，包括代码提交、文档改进、问题报告和功能建议。
 
@@ -390,3 +390,7 @@ A: 破坏性变更需要：
 *From data intelligence emerges*
 
 </div>
+
+---
+
+© 2026 SPHARX Ltd. 保留所有权利。

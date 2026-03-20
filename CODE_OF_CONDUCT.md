@@ -1,4 +1,4 @@
-# 贡献者公约 CODE OF CONDUCT
+﻿# 贡献者公约 CODE OF CONDUCT
 
 ## 我们的承诺
 
@@ -91,3 +91,7 @@
 致力于构建包容、开放的开源社区
 
 </div>
+
+---
+
+© 2026 SPHARX Ltd. 保留所有权利。

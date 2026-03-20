@@ -31,7 +31,7 @@ static provider_ctx_t* local_init(const char* name, const char* api_key,
     if (api_base)
         strncpy(ctx->api_base, api_base, sizeof(ctx->api_base) - 1);
     else
-        strcpy(ctx->api_base, "http://localhost:8080/v1");
+        strncpy(ctx->api_base, "http://localhost:8080/v1", sizeof(ctx->api_base) - 1);
     ctx->timeout_sec = timeout_sec > 0 ? timeout_sec : 60.0;
     ctx->max_retries = max_retries;
     return (provider_ctx_t*)ctx;
