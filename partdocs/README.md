@@ -1,6 +1,6 @@
-# AgentOS 技术文档中心 (PartDocs)
+﻿# AgentOS 技术文档中心 (PartDocs)
 
-**版本**: 1.0.0.3  
+**版本**: 1.0.0.5  
 **最后更新**: 2026-03-18  
 
 ---
@@ -323,7 +323,7 @@ python scripts/validate_docs.py
 ```markdown
 # 标题
 
-**版本**: 1.0.0.3  
+**版本**: 1.0.0.5  
 **最后更新**: 2026-03-18  
 
 ## 概述
@@ -380,3 +380,7 @@ python scripts/validate_docs.py
 ---
 
 **Apache License 2.0 © 2026 SPHARX. "From data intelligence emerges."**
+
+---
+
+© 2026 SPHARX Ltd. 保留所有权利。

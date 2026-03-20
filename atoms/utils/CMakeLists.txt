@@ -1,8 +1,8 @@
-# Copyright (c) 2026 SPHARX. All Rights Reserved. "From data intelligence emerges."
+﻿# Copyright (c) 2026 SPHARX. All Rights Reserved. "From data intelligence emerges."
 # utils 模块构建文件
 
 cmake_minimum_required(VERSION 3.20)
-project(agentos-utils VERSION 1.0.0.3 LANGUAGES C)
+project(agentos-utils VERSION 1.0.0.5 LANGUAGES C)
 
 find_package(PkgConfig REQUIRED)
 find_package(Threads REQUIRED)

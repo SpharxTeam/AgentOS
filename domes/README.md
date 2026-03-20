@@ -1,6 +1,6 @@
-# Domes – AgentOS "穹顶之下"安全沙箱
+﻿# Domes – AgentOS "穹顶之下"安全沙箱
 
-**版本**：1.0.0.3  
+**版本**：1.0.0.5  
 **归属**：AgentOS 安全核心
 
 Domes 提供生产级的安全隔离与权限控制，包含四大核心模块：
@@ -76,3 +76,7 @@ domes_init(&cfg, &domes);
 // ... 使用 domes_workbench_create 等
 domes_destroy(domes);
 ```
+
+---
+
+© 2026 SPHARX Ltd. 保留所有权利。

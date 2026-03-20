@@ -1,6 +1,6 @@
-# AgentOS 系统调用层 (Syscall)
+﻿# AgentOS 系统调用层 (Syscall)
 
-**版本**: 1.0.0.3  
+**版本**: 1.0.0.5  
 **路径**: `atoms/syscall/`  
 **最后更新**: 2026-03-18  
 **许可证**: Apache License 2.0
@@ -245,3 +245,7 @@ Syscall 层为 CoreLoopThree 提供底层系统调用支持：
 ---
 
 **Apache License 2.0 © 2026 SPHARX. "From data intelligence emerges."**
+
+---
+
+© 2026 SPHARX Ltd. 保留所有权利。

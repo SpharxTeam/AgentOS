@@ -1,4 +1,4 @@
-# AgentOS 内核编译指南
+﻿# AgentOS 内核编译指南
 
 ## 1. 环境要求
 
@@ -60,3 +60,7 @@ A: 安装开发包：`sudo apt install libssl-dev` (Ubuntu/Debian) 或 `brew ins
 
 **Q: 单元测试失败**
 A: 检查环境变量 `AGENTOS_TEST_DIR` 是否有写权限，并确保所有依赖服务已启动。
+
+---
+
+© 2026 SPHARX Ltd. 保留所有权利。

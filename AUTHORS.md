@@ -1,4 +1,4 @@
-# AgentOS 贡献者名单
+﻿# AgentOS 贡献者名单
 
 感谢所有为 AgentOS 项目做出贡献的开发者和社区成员！
 
@@ -219,3 +219,7 @@ _（统计数据将在首次发布时更新）_
 *From data intelligence emerges*
 
 </div>
+
+---
+
+© 2026 SPHARX Ltd. 保留所有权利。

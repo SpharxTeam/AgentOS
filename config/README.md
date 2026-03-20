@@ -1,6 +1,6 @@
-# AgentOS 配置中心
+﻿# AgentOS 配置中心
 
-**版本**: 1.0.0.3  
+**版本**: 1.0.0.5  
 **最后更新**: 2026-03-18  
 
 ---
@@ -254,3 +254,7 @@ python -c "from agentos import Config; Config.load('config/xxx.yaml')"
 ---
 
 **Apache License 2.0 © 2026 SPHARX**
+
+---
+
+© 2026 SPHARX Ltd. 保留所有权利。

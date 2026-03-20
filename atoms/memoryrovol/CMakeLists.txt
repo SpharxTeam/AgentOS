@@ -1,8 +1,8 @@
-# Copyright (c) 2026 SPHARX. All Rights Reserved. "From data intelligence emerges."
+﻿# Copyright (c) 2026 SPHARX. All Rights Reserved. "From data intelligence emerges."
 # MemoryRovol 模块顶层构建文件
 
 cmake_minimum_required(VERSION 3.20)
-project(agentos-memoryrovol VERSION 1.0.0.3 LANGUAGES C)
+project(agentos-memoryrovol VERSION 1.0.0.5 LANGUAGES C)
 
 # 选项
 option(BUILD_TESTS "Build tests" OFF)

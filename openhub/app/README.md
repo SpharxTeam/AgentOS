@@ -1,4 +1,4 @@
-# App - 应用示例
+﻿# App - 应用示例
 
 本目录包含基于 AgentOS 构建的示例应用，展示如何使用系统提供的各种能力。
 
@@ -168,3 +168,7 @@ logging:
 ## 📄 许可证
 
 Apache License 2.0 - 详见 [LICENSE](../../LICENSE)
+
+---
+
+© 2026 SPHARX Ltd. 保留所有权利。

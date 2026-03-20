@@ -8,6 +8,7 @@
 #include "svc_logger.h"
 #include "svc_error.h"
 #include "response.h"
+#include "monitor_service.h"
 #include <signal.h>
 #include <unistd.h>
 #include <stdlib.h>
@@ -17,12 +18,14 @@
 #include <sys/un.h>
 #include <pthread.h>
 #include <cjson/cJSON.h>
+#include <time.h>
 
 #define SOCKET_PATH "/var/run/agentos/llm.sock"
 #define MAX_BUFFER 65536
 #define MAX_CLIENTS 64
 
 static llm_service_t* g_service = NULL;
+static monitor_service_t* g_monitor = NULL;
 static int g_server_fd = -1;
 static volatile int g_running = 1;
 
@@ -112,12 +115,33 @@ static void handle_complete(cJSON* params, int id, int client_fd) {
         return;
     }
 
+    // 记录请求开始时间
+    uint64_t start_time = (uint64_t)time(NULL) * 1000;
+
     llm_response_t* resp = NULL;
     int ret = llm_service_complete(g_service, &cfg, &resp);
+    
+    // 记录请求结束时间
+    uint64_t end_time = (uint64_t)time(NULL) * 1000;
+    uint32_t execution_time = (uint32_t)(end_time - start_time);
+
     if (ret != 0) {
         char* err = build_error_response(INTERNAL_ERROR, "Service error", id);
         write(client_fd, err, strlen(err));
         free(err);
+        
+        // 记录失败指标
+        metric_info_t metric = {
+            .name = "llm.request.failed",
+            .description = "LLM 请求失败",
+            .type = METRIC_TYPE_COUNTER,
+            .labels = NULL,
+            .label_count = 0,
+            .value = 1.0,
+            .timestamp = end_time
+        };
+        monitor_service_record_metric(g_monitor, &metric);
+        
         return;
     }
 
@@ -144,14 +168,121 @@ static void handle_complete(cJSON* params, int id, int client_fd) {
     cJSON_Delete(result);
     write(client_fd, success, strlen(success));
     free(success);
+    
+    // 记录成功指标
+    metric_info_t metric = {
+        .name = "llm.request.succeeded",
+        .description = "LLM 请求成功",
+        .type = METRIC_TYPE_COUNTER,
+        .labels = NULL,
+        .label_count = 0,
+        .value = 1.0,
+        .timestamp = end_time
+    };
+    monitor_service_record_metric(g_monitor, &metric);
+    
+    metric.name = "llm.request.execution_time";
+    metric.description = "LLM 请求执行时间";
+    metric.type = METRIC_TYPE_GAUGE;
+    metric.value = (double)execution_time;
+    monitor_service_record_metric(g_monitor, &metric);
+    
+    // 记录日志
+    log_info_t log = {
+        .level = LOG_LEVEL_INFO,
+        .message = "LLM request completed successfully",
+        .service_name = "llm_d",
+        .file = __FILE__,
+        .line = __LINE__,
+        .function = __func__,
+        .timestamp = end_time,
+        .context = NULL,
+        .context_count = 0
+    };
+    monitor_service_log(g_monitor, &log);
 }
 
-/* ---------- 处理 complete_stream 方法（简化，仅返回错误） ---------- */
+/* ---------- 流式回调 ---------- */
+static void stream_callback(const char* chunk, void* user_data) {
+    int client_fd = *((int*)user_data);
+    write(client_fd, chunk, strlen(chunk));
+}
+
+/* ---------- 处理 complete_stream 方法 ---------- */
 static void handle_complete_stream(cJSON* params, int id, int client_fd) {
-    (void)params;
-    char* err = build_error_response(METHOD_NOT_FOUND, "Streaming not implemented yet", id);
-    write(client_fd, err, strlen(err));
-    free(err);
+    llm_request_config_t cfg;
+    if (parse_params(params, &cfg) != 0) {
+        char* err = build_error_response(INVALID_PARAMS, "Invalid params", id);
+        write(client_fd, err, strlen(err));
+        free(err);
+        return;
+    }
+
+    // 记录请求开始时间
+    uint64_t start_time = (uint64_t)time(NULL) * 1000;
+
+    llm_response_t* resp = NULL;
+    int ret = llm_service_complete_stream(g_service, &cfg, stream_callback, &resp);
+    
+    // 记录请求结束时间
+    uint64_t end_time = (uint64_t)time(NULL) * 1000;
+    uint32_t execution_time = (uint32_t)(end_time - start_time);
+
+    if (ret != 0) {
+        char* err = build_error_response(INTERNAL_ERROR, "Service error", id);
+        write(client_fd, err, strlen(err));
+        free(err);
+        
+        // 记录失败指标
+        metric_info_t metric = {
+            .name = "llm.stream.request.failed",
+            .description = "LLM 流式请求失败",
+            .type = METRIC_TYPE_COUNTER,
+            .labels = NULL,
+            .label_count = 0,
+            .value = 1.0,
+            .timestamp = end_time
+        };
+        monitor_service_record_metric(g_monitor, &metric);
+        
+        return;
+    }
+
+    if (resp) {
+        llm_response_free(resp);
+    }
+    
+    // 记录成功指标
+    metric_info_t metric = {
+        .name = "llm.stream.request.succeeded",
+        .description = "LLM 流式请求成功",
+        .type = METRIC_TYPE_COUNTER,
+        .labels = NULL,
+        .label_count = 0,
+        .value = 1.0,
+        .timestamp = end_time
+    };
+    monitor_service_record_metric(g_monitor, &metric);
+    
+    metric.name = "llm.stream.request.execution_time";
+    metric.description = "LLM 流式请求执行时间";
+    metric.type = METRIC_TYPE_GAUGE;
+    metric.value = (double)execution_time;
+    monitor_service_record_metric(g_monitor, &metric);
+    
+    // 记录日志
+    log_info_t log = {
+        .level = LOG_LEVEL_INFO,
+        .message = "LLM stream request completed successfully",
+        .service_name = "llm_d",
+        .file = __FILE__,
+        .line = __LINE__,
+        .function = __func__,
+        .timestamp = end_time,
+        .context = NULL,
+        .context_count = 0
+    };
+    monitor_service_log(g_monitor, &log);
 }
 
 /* ---------- 处理单个客户端连接 ---------- */
@@ -218,6 +349,36 @@ int main(int argc, char** argv) {
         return 1;
     }
 
+    // 初始化监控服务
+    monitor_config_t monitor_config = {
+        .metrics_collection_interval_ms = 5000,
+        .health_check_interval_ms = 10000,
+        .log_flush_interval_ms = 30000,
+        .alert_check_interval_ms = 5000,
+        .log_file_path = "llm_monitor.log",
+        .metrics_storage_path = "llm_metrics",
+        .enable_tracing = true,
+        .enable_alerting = true
+    };
+
+    if (monitor_service_create(&monitor_config, &g_monitor) != 0) {
+        SVC_LOG_ERROR("Failed to create monitor service");
+        llm_service_destroy(g_service);
+        return 1;
+    }
+
+    // 记录服务启动指标
+    metric_info_t metric = {
+        .name = "llm.service.started",
+        .description = "LLM 服务启动",
+        .type = METRIC_TYPE_COUNTER,
+        .labels = NULL,
+        .label_count = 0,
+        .value = 1.0,
+        .timestamp = (uint64_t)time(NULL) * 1000
+    };
+    monitor_service_record_metric(g_monitor, &metric);
+
     /* 创建 Unix socket 服务器 */
     struct sockaddr_un addr;
     g_server_fd = socket(AF_UNIX, SOCK_STREAM, 0);
@@ -260,6 +421,12 @@ int main(int argc, char** argv) {
     close(g_server_fd);
     unlink(SOCKET_PATH);
     llm_service_destroy(g_service);
+    
+    // 销毁监控服务
+    if (g_monitor) {
+        monitor_service_destroy(g_monitor);
+    }
+    
     SVC_LOG_INFO("LLM service stopped");
     return 0;
 }

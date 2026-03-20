@@ -1,5 +1,5 @@
-cmake_minimum_required(VERSION 3.20)
-project(agentos-dynamic VERSION 1.0.0.3 LANGUAGES C)
+﻿cmake_minimum_required(VERSION 3.20)
+project(agentos-dynamic VERSION 1.0.0.5 LANGUAGES C)
 
 find_package(Threads REQUIRED)
 find_package(PkgConfig REQUIRED)

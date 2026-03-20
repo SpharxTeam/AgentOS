@@ -1,8 +1,8 @@
-# Copyright (c) 2026 SPHARX. All Rights Reserved. "From data intelligence emerges."
+﻿# Copyright (c) 2026 SPHARX. All Rights Reserved. "From data intelligence emerges."
 # CoreLoopThree 主模块构建文件
 
 cmake_minimum_required(VERSION 3.20)
-project(agentos-coreloopthree VERSION 1.0.0.3 LANGUAGES C)
+project(agentos-coreloopthree VERSION 1.0.0.5 LANGUAGES C)
 
 # 设置输出路径
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)

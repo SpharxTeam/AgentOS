@@ -1,4 +1,4 @@
-# OpenHub - 开放协作中心
+﻿# OpenHub - 开放协作中心
 
 OpenHub（开放协作中心）是 AgentOS 的开放生态平台，提供应用示例、社区贡献和市场机制的完整支持。
 
@@ -161,3 +161,7 @@ result = skill.execute(action="navigate", url="https://example.com")
 ## 📄 许可证
 
 Apache License 2.0 - 详见 [LICENSE](../LICENSE)
+
+---
+
+© 2026 SPHARX Ltd. 保留所有权利。
