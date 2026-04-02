@@ -5,7 +5,7 @@
 # Contact Information / 联系信息
 contact_links:
   - name: Security Vulnerability Report / 安全漏洞报告
-    url: https://gitee.com/spharx/agentos/security
+    url: https://gitcode.com/spharx/agentos/security
     about: |
       Please do not report security vulnerabilities via public issues. 
       请勿通过公开 Issue 报告安全漏洞。
@@ -13,13 +13,13 @@ contact_links:
       请参阅 SECURITY.md 了解正确的报告流程。
   
   - name: Architecture Questions / 架构问题
-    url: https://gitee.com/spharx/agentos/blob/main/manuals/ARCHITECTURAL_PRINCIPLES.md
+    url: https://gitcode.com/spharx/agentos/blob/main/manuals/ARCHITECTURAL_PRINCIPLES.md
     about: |
       Read our ARCHITECTURAL_PRINCIPLES.md for design principles.
       阅读我们的 ARCHITECTURAL_PRINCIPLES.md 了解设计原则。
   
   - name: Contributing Guide / 贡献指南
-    url: https://gitee.com/spharx/agentos/blob/main/CONTRIBUTING.md
+    url: https://gitcode.com/spharx/agentos/blob/main/CONTRIBUTING.md
     about: |
       Please read our contributing guide before submitting issues or PRs.
       请在提交 Issue 或 PR 之前阅读贡献指南。
