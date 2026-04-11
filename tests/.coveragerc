@@ -5,7 +5,7 @@
 [run]
 # 运行配置
 source = 
-    ../tools/python/agentos
+    ../toolkit/python/agentos
     ../atoms
 branch = True
 parallel = True
@@ -114,5 +114,5 @@ output = reports/coverage/lcov.info
 [paths]
 # 路径映射
 source =
-    tools/python/agentos
+    toolkit/python/agentos
     atoms/

@@ -1,227 +1,774 @@
+# =============================================================================
 # AgentOS .gitignore 文件
+# 版本：7.0.0
+# 最后更新：2026-04-09
+# 说明：规范化排除所有不应纳入版本控制的文件和目录
+#
+# 设计原则：
+# 1. 构建产物一律排除（CMake 缓存、编译产物等）
+# 2. 运行时生成的文件一律排除（数据库、日志、模型等）
+# 3. 本地开发配置一律排除（.env.local、IDE 配置等）
+# 4. 空目录通过 .gitkeep 保留，但排除目录内容
+# 5. 项目必需文件使用否定规则明确保留
+#
+# 项目模块结构（2026-04-09 V5.0 校正后）：
+# 核心模块 (agentos/)
+#   - atoms/       : 内核原子模块 (40,917行, A+评级)
+#   - atomslite/   : 轻量级原子模块
+#   - commons/     : 统一基础库 (S级, 97.1分)
+#   - cupolas/     : 安全穹顶模块 (A++评级, 97.5分)
+#   - daemon/      : 用户态服务模块 (S+评级, 96.5分)
+#   - gateway/     : 网关服务模块 (A+评级)
+#   - heapstore/   : 数据持久化层 (A评级, 98%生产就绪)
+#   - manager/     : 配置管理器
+#   - toolkit/     : 多语言 SDK 工具 (35,638行, 4语言)
+#   - openlab/     : Python 应用中心 (已移动到 agentos/)
+#
+# 文档模块
+#   - docs/        : 项目文档 (原 manuals/)
+#
+# 辅助模块
+#   - scripts/     : 构建和运维脚本
+#     - desktop-client/ : 桌面客户端 (Tauri)
+#   - tests/       : 测试框架 (A+认证, 98.5分)
+#   - .gitcode/    : CI/CD配置 (V3.0优化后，统一管理)
+# =============================================================================
 
-# ==================== 编译产物 ====================
-# CMake
-build/
-cmake-build-*/
+# =============================================================================
+# 修复记录目录（本地工作记录，不追踪）
+# =============================================================================
+
+.bendiwenjian/
+utf8_encoding.reg
+# =============================================================================
+# 1. CMake 构建系统（构建产物，不追踪）
+# =============================================================================
+
 CMakeCache.txt
 CMakeFiles/
 cmake_install.cmake
-Makefile
-*.cmake
+cmake_install.*
+CMakeUserPresets.json
+CMakePresets.json
 
-# 编译中间文件
+# CMake 构建目录
+build/
+_build/
+cmake-build*/
+cmake-build-debug/
+cmake-build-release/
+cmake-build-coverage/
+
+# 编译器数据库（IDE 工具生成）
+compile_commands.json
+compile_flags.txt
+compile_commands/*.json
+
+# =============================================================================
+# 2. 编译产物（构建时生成，不追踪）
+# =============================================================================
+
+# 目标文件
 *.o
 *.obj
 *.so
+*.so.*
 *.dll
+*.dll.a
 *.dylib
-*.exe
 *.lib
 *.a
 *.la
+*.lai
+*.d
 
 # 可执行文件
+*.exe
+*.exe.manifest
 *.out
 *.app
+*.bin
 
-# ==================== Python 相关 ====================
+# 预编译头
+*.pch
+*.gch
+*.pch.gch
+
+# =============================================================================
+# 3. Python 相关（运行时生成，不追踪）
+# =============================================================================
+
 # Python 缓存
 __pycache__/
 *.py[cod]
 *$py.class
 *.pyo
+*.pyd
 .Python
+*.pyc
+*.pyc.*
 
-# Python 虚拟环境
+# 虚拟环境
 venv/
 env/
 ENV/
-.venv
-.pyvenv
+.venv/
+.python-version
+.venv.bak/
 
-# Python 包管理
+# Python 包管理产物
 *.egg-info/
-dist/
-eggs/
 *.egg
+*.dist-info/
+*.pydist-info/
+dist/
+wheels/
+*.whl
 
-# IPython
-profile_default/
-ipython_config.py
+# Poetry
+.poetry/
+poetry.lock
 
-# Jupyter Notebook
-.ipynb_checkpoints
+# Pipenv
+Pipfile.lock
 
-# pytest
+# 测试和覆盖率
 .pytest_cache/
 .coverage
+.coverage.*
+coverage/
 htmlcov/
+*.xml
+coverage.xml
+.tox/
+.nox/
 
-# mypy
+# Jupyter
+.ipynb_checkpoints/
+profile_default/
+ipython_config.py
+ipython_kernel_config.py
+
+# 类型检查缓存
 .mypy_cache/
 .dmypy.json
 dmypy.json
+.ruff_cache/
 
-# ==================== 环境变量和配置 ====================
-# 敏感配置文件
+# Ruff
+.ruff_cache/
+
+# =============================================================================
+# 4. Go 语言 SDK（构建产物，不追踪）
+# =============================================================================
+
+agentos/toolkit/go/vendor/
+agentos/toolkit/go/go.sum
+agentos/toolkit/go/*.exe
+agentos/toolkit/go/testsuite/
+agentos/toolkit/go/coverage/
+*.test
+cover.out
+cover.html
+
+# =============================================================================
+# 5. Rust 语言 SDK（构建产物，不追踪）
+# =============================================================================
+
+agentos/toolkit/rust/target/
+Cargo.lock
+agentos/toolkit/rust/debug/
+agentos/toolkit/rust/release/
+agentos/toolkit/rust/doc/
+agentos/toolkit/rust/target/doc/
+
+# =============================================================================
+# 6. TypeScript/JavaScript SDK（构建产物，不追踪）
+# =============================================================================
+
+agentos/toolkit/typescript/node_modules/
+agentos/toolkit/typescript/dist/
+agentos/toolkit/typescript/build/
+agentos/toolkit/typescript/coverage/
+agentos/toolkit/typescript/.tsbuildinfo
+agentos/toolkit/typescript/.pnpm-store/
+agentos/toolkit/typescript/tsbuildinfo/
+.next/
+.nuxt/
+
+# =============================================================================
+# 7. 环境变量和敏感配置（本地配置，不追踪）
+# =============================================================================
+
+# 环境文件
 .env
 .env.local
 .env.*.local
+.env.dev
+.env.test
+.env.production
+*.env
+
+# 密钥和证书
 *.pem
 *.key
+*.crt
+*.cer
+*.der
+*.p12
+*.pfx
+*.jks
+*.keystore
 secrets.json
-config.local.yaml
-config.local.yml
+secrets.yaml
+secrets.yml
+credentials.json
+service_account.json
+*.keystore
+oauth/
+.token
 
-# ==================== IDE 配置 ====================
+# 本地配置覆盖
+manager.local.yaml
+manager.local.yml
+manager.*.local.yaml
+manager.*.local.yml
+settings.local.py
+local_settings.py
+override.yaml
+
+# =============================================================================
+# 8. IDE 和编辑器配置（本地开发配置，不追踪）
+# =============================================================================
+
 # Visual Studio Code
 .vscode/
 *.code-workspace
+*.code-snippets
+.vscode-test/
 
-# IntelliJ IDEA
+# JetBrains 系列
 .idea/
 *.iml
 *.ipr
 *.iws
-.本地总结
-# CLion
-.clion/
+out/
+*.hprof
+*.heap
+*.snap
+*.clion/
 
 # Vim
 *.swp
 *.swo
 *~
 .netrwhist
-
-# Emacs
-*~
-\#*\#
+*.un~
+# \#*\#
 .\#*
+*.elc
 
 # Sublime Text
 *.sublime-project
 *.sublime-workspace
 
-# ==================== 日志和数据文件 ====================
+# Xcode
+*.xcodeproj/
+*.xcworkspace
+*.xcuserstated
+*.xccheckout
+*.pbxuser
+*.perspectivev3
+
+# Visual Studio
+*.suo
+*.user
+*.userosscache
+.sln.docstates
+[Dd]ebug/
+[Rr]elease/
+x64/
+x86/
+bld/
+[Bb]in/
+[Oo]bj/
+
+# Eclipse
+.classpath
+.project
+.settings/
+bin/
+
+# =============================================================================
+# 9. 日志、数据库和运行时文件（运行时生成，不追踪）
+# =============================================================================
+
 # 日志文件
 *.log
 logs/
-partdata/logs/
+*.logs
+agentos/heapstore/logs/
 
 # 数据库文件
 *.db
+*.db-shm
+*.db-wal
 *.sqlite
 *.sqlite3
-partdata/registry/*.db
-partdata/registry/*.sqlite
+*.db.sqlite
+*.db-journal
+agentos/heapstore/registry/*.db
+agentos/heapstore/registry/*.sqlite
+agentos/heapstore/db/
+registry.db
+registry.sqlite
 
-# 追踪数据
-partdata/traces/
+# 追踪和性能数据
+agentos/heapstore/traces/
 *.trace
 *.spans
-.git
+*.prof
+*.profraw
+*.gcda
+*.gcno
 
-# 缓存文件
+# 缓存
 .cache/
 *.cache
 tmp/
 temp/
-*.tmp
+*.bak
+*.backup
+*.orig
 
-# ==================== 测试相关 ====================
+# =============================================================================
+# 10. agentos/heapstore/ 运行时目录（运行时生成，仅保留空路径）
+# =============================================================================
+
+# kernel/ 子目录（排除内容，保留 .gitkeep）
+agentos/heapstore/kernel/ipc/binder/*
+!agentos/heapstore/kernel/ipc/binder/.gitkeep
+agentos/heapstore/kernel/ipc/channels/*
+!agentos/heapstore/kernel/ipc/channels/.gitkeep
+agentos/heapstore/kernel/memory/index/*
+!agentos/heapstore/kernel/memory/index/.gitkeep
+agentos/heapstore/kernel/memory/meta/*
+!agentos/heapstore/kernel/memory/meta/.gitkeep
+agentos/heapstore/kernel/memory/raw/*
+!agentos/heapstore/kernel/memory/raw/.gitkeep
+agentos/heapstore/kernel/memory/patterns/*
+!agentos/heapstore/kernel/memory/patterns/.gitkeep
+
+# services/ 子目录（排除内容，保留 .gitkeep）
+agentos/heapstore/services/llm_d/*
+!agentos/heapstore/services/llm_d/.gitkeep
+agentos/heapstore/services/market_d/*
+!agentos/heapstore/services/market_d/.gitkeep
+agentos/heapstore/services/tool_d/*
+!agentos/heapstore/services/tool_d/.gitkeep
+
+# models/ 子目录（排除内容，保留 .gitkeep）
+agentos/heapstore/models/*
+!agentos/heapstore/models/.gitkeep
+
+# 其他运行时目录
+agentos/heapstore/logs/*
+agentos/heapstore/traces/*
+agentos/heapstore/registry/*
+agentos/heapstore/db/*
+!agentos/heapstore/logs/.gitkeep
+!agentos/heapstore/traces/.gitkeep
+!agentos/heapstore/registry/.gitkeep
+!agentos/heapstore/db/.gitkeep
+
+# =============================================================================
+# 11. 测试相关（测试结果不追踪，测试代码保留）
+# =============================================================================
+
+# 测试结果和报告
+test-results/
+test_output/
+*.test
+*.spec
+*.snap
+*.snapshot
+
 # 测试覆盖率
 coverage/
+htmlcov/
 *.gcov
-*.gcda
-*.gcno
 
-# 测试输出
-test-results/
-*.test
-*.spec.js.snap
+# 测试数据（运行时生成）
+test_data/generated/
+*.test.data
+tests/fuzz/*.fuzz
+tests/fuzz/corpus/
+tests/fuzz/seeds/
+tests/fuzz/hangs/
 
-# ==================== 文档生成 ====================
-# Sphinx 文档
-partdocs/_build/
-partdocs/.doctrees/
+# 基准测试结果
+tests/benchmarks/**/results/
+tests/benchmarks/**/plots/
+tests/benchmarks/**/reports/
+*.benchmark
+benchmark_results/
+perf_results/
 
-# Doxygen
+# tests/benchmarks/concurrency/report/（排除内容，保留 .gitkeep）
+tests/benchmarks/concurrency/report/*
+!tests/benchmarks/concurrency/report/.gitkeep
+
+# =============================================================================
+# 12. 文档生成（构建产物，不追踪）
+# =============================================================================
+
+manuals/_build/
+manuals/.doctrees/
+manuals/doctrees/
 doxygen/
 xml/
 html/
 latex/
+man/
+site/
+manuals/architecture/diagrams/*.svg
+manuals/architecture/diagrams/*.png
+manuals/architecture/diagrams/*.pdf
+toolkit/go/doc/
 
-# ==================== 操作系统文件 ====================
+# =============================================================================
+# 13. 操作系统文件（系统生成，不追踪）
+# =============================================================================
+
 # macOS
 .DS_Store
 .AppleDouble
 .LSOverride
 ._*
+.fseventsd
+.Spotlight-V100
+.TemporaryItems
+.Trashes
+.VolumeIcon.icn
+.apdisk
 
 # Windows
 Thumbs.db
 ehthumbs.db
 Desktop.ini
 $RECYCLE.BIN/
-*.cab
-*.msi
-*.msix
-*.msm
-*.msp
+@eaDir/
 *.lnk
+*.url
 
-# 临时文件
-*.bak
-*.backup
-*.old
+# Linux
+.fuse_hidden*
+.Trash-*
+.nfs*
 
-# ==================== 依赖管理 ====================
-# Node.js (如果有前端组件)
-node_modules/
-npm-debug.log
-yarn-error.log
+# =============================================================================
+# 14. 依赖管理（本地安装，不追踪）
+# =============================================================================
 
-# Rust (如果有 Rust SDK)
-target/
-**/Cargo.lock
-**/Cargo.toml.orig
-
-# Go (如果有 Go SDK)
-go.sum
 vendor/
+vendor/bundle/
+Gemfile.lock
+composer.lock
+Carthage/Build/
+.swiftpm/
 
-# ==================== 特定项目文件 ====================
-# FAISS 索引文件（大型二进制）
-partdata/models/*.faiss
-partdata/models/*.index
+# =============================================================================
+# 15. 大型文件和二进制文件（运行时生成，不追踪）
+# =============================================================================
 
-# 模型权重（大型文件）
-partdata/model/weights/*.bin
-partdata/model/weights/*.pth
-partdata/model/weights/*.h5
-*.onnx
+# FAISS 索引
+agentos/heapstore/models/*.faiss
+agentos/heapstore/models/*.index
+agentos/heapstore/models/*.pkl
+agentos/heapstore/models/*.pickle
 
-# 归档文件
+# 模型权重
+agentos/heapstore/model/
+agentos/heapstore/models/*.bin
+agentos/heapstore/models/*.pth
+agentos/heapstore/models/*.h5
+agentos/heapstore/models/*.pt
+agentos/heapstore/models/*.onnx
+*.tflite
+
+# 向量和嵌入
+*.npy
+*.npz
+*.parquet
+*.arrow
+*.feather
+
+# 数据集
+/data/
+/datasets/
+*.csv
+*.tsv
+*.jsonl
+
+# 压缩包
 *.tar.gz
+*.tar.bz2
+*.tar.xz
 *.zip
 *.rar
 *.7z
+*.gz
+*.bz2
+*.xz
 
-# ==================== 脚本生成的文件 ====================
-# 构建脚本生成
-artifacts/
-packages/
-deploy/
+# Docker 和 Kubernetes
+deploy/docker/*.tar
+deploy/docker/*.tar.gz
+deploy/docker/.docker-*/
+docker-compose.override.yml
+.docker/
+*.kubeconfig
+.kube/
 
-# ==================== 其他 ====================
-# 忽略大型数据集
-*.csv
-*.parquet
-*.arrow
-/data/
-/datasets/
+# =============================================================================
+# 16. 部署和安装（构建产物，不追踪）
+# =============================================================================
 
-# 备份文件
-*.orig
-PATCHES.txt
+deploy/artifacts/
+deploy/packages/
+scripts/deploy/artifacts/
+scripts/deploy/packages/
+install/
+installed/
+VERSION
+version.txt
+build_version.txt
+
+# =============================================================================
+# 17. 代码质量工具缓存（运行时生成，不追踪）
+# =============================================================================
+
+.pre-commit-manager.local.yaml
+.eslintcache
+tools/eslint/.eslintcache
+.prettierrc.local
+.prettierignore.local
+.flake8
+*.flake8
+.pylintrc.local
+.pylint.d/
+cppcheck.local.xml
+.semgrep.local.yaml
+.lizard.out
+.jscpd/
+.jscpd-store/
+.scannerwork/
+sonar-report.json
+.clangd/
+.cache/clangd/
+
+# =============================================================================
+# 18. 本地开发文档（临时文件，不追踪）
+# =============================================================================
+
+*.draft
+*.todo
+*.notes
+DRAFT*
+NOTES*
+TODO*
+CHANGELOG.local.md
+CHANGELOG.local
+*.md.bak
+*.md.backup
+README.local.md
+README.local
+*.tmp
+*.tmp.sh
+*.tmp.bat
+*.tmp.ps1
+temp_*
+tmp_*
+*.personal
+*.private
+*.local
+settings.local
+override.local
+docs/local/
+docs/private/
+wiki/
+agentos/heapstore/reports/
+reports/
+test_reports/
+coverage_reports/
+
+# =============================================================================
+# 19. 桌面客户端（Tauri 构建产物，不追踪）
+# =============================================================================
+
+# Tauri 构建产物
+scripts/desktop-client/src-tauri/target/
+scripts/desktop-client/dist/
+scripts/desktop-client/node_modules/
+
+# 前端构建缓存
+scripts/desktop-client/.vite/
+scripts/desktop-client/.turbo/
+
+# Tauri 配置缓存
+scripts/desktop-client/src-tauri/WixTools/
+scripts/desktop-client/src-tauri/Cargo.lock
+
+# =============================================================================
+# 20. 新增目录（docker/ 和 docs/）
+# =============================================================================
+
+# docker/ 目录（保留配置文件，排除运行时产物）
+docker/*.log
+docker/*.tar
+docker/*.tar.gz
+docker/volumes/
+docker/.docker-*/
+
+# docs/ 目录（保留源文件，排除构建产物）
+docs/_build/
+docs/.doctrees/
+docs/doctrees/
+docs/html/
+docs/latex/
+docs/man/
+docs/site/
+docs/*.svg
+docs/*.png
+docs/*.pdf
+docs/local/
+docs/private/
+
+# =============================================================================
+# 21. 必须保留的例外（项目必需文件）
+# =============================================================================
+
+# 版本控制配置
+!.gitignore
+!.gitattributes
+
+# 环境模板
+!.env.example
+
+# agentos/manager/ 配置文件
+!agentos/manager/*.yaml
+!agentos/manager/*.yml
+!agentos/manager/*.template
+!agentos/manager/*.schema.json
+!agentos/manager/.env.template
+
+# 关键文档
+!docs/**/*.md
+!README.md
+!README_EN.md
+!LICENSE
+!CHANGELOG.md
+!CONTRIBUTING.md
+!AUTHORS.md
+!SECURITY.md
+!SUPPORT.md
+!CODE_OF_CONDUCT.md
+!NOTICE
+!ACKNOWLEDGMENTS.md
+
+# 构建和运维脚本
+!scripts/**/*.sh
+!scripts/**/*.py
+!scripts/**/*.bat
+!scripts/**/*.ps1
+!scripts/**/*.yml
+!scripts/**/*.yaml
+!scripts/deploy/docker/.gitignore
+
+# scripts/dev/ 开发配置
+!scripts/dev/config/.clang-format
+!scripts/dev/config/.clangd
+!scripts/dev/config/.editorconfig
+!scripts/dev/config/.lizardrc
+!scripts/dev/config/.jscpd.json
+!scripts/dev/config/.pre-commit-config.yaml
+!scripts/dev/config/vcpkg.json
+!scripts/dev/quickstart.sh
+!scripts/dev/validate.sh
+
+# 测试框架
+!tests/**/*.py
+!tests/**/*.sh
+!tests/**/*.yaml
+!tests/**/*.yml
+!tests/**/*.c
+!tests/**/*.h
+!tests/**/*.go
+!tests/**/*.rs
+!tests/.coveragerc
+!tests/.gitkeep
+!tests/benchmarks/**/*.gitkeep
+!tests/benchmarks/concurrency/report/.gitkeep
+!tests/unit/sdk/python/.gitkeep
+!tests/unit/sdk/rust/.gitkeep
+!tests/unit/services/llm_d/.gitkeep
+!tests/unit/services/tool_d/.gitkeep
+
+# Docker 配置
+!Dockerfile*
+!docker-compose*.yml
+!deploy/docker/Dockerfile*
+!agentos/openlab/Dockerfile
+!agentos/gateway/docker/Dockerfile*
+!agentos/daemon/Dockerfile.ci
+!scripts/deploy/docker/Dockerfile*
+!docker/Dockerfile*
+!docker/docker-compose*.yml
+
+# CMake 构建配置
+!agentos/atoms/**/CMakeLists.txt
+!agentos/atomslite/**/CMakeLists.txt
+!agentos/commons/**/CMakeLists.txt
+!agentos/commons/tests/CMakeLists.txt
+!agentos/cupolas/CMakeLists.txt
+!agentos/daemon/**/CMakeLists.txt
+!agentos/gateway/CMakeLists.txt
+!agentos/heapstore/**/CMakeLists.txt
+!tests/unit/**/CMakeLists.txt
+
+# 根目录项目配置
+!Makefile
+!pyproject.toml
+
+# agentos/toolkit/ 配置文件
+!agentos/toolkit/python/pyproject.toml
+!agentos/toolkit/python/setup.py
+!agentos/toolkit/go/go.mod
+!agentos/toolkit/rust/Cargo.toml
+!agentos/toolkit/typescript/package.json
+!agentos/toolkit/typescript/tsconfig.json
+!agentos/toolkit/typescript/jest.config.js
+
+# openlab/ 配置文件
+!agentos/openlab/pyproject.toml
+!agentos/openlab/requirements.txt
+
+# 空目录 .gitkeep
+!agentos/commons/utils/types/.gitkeep
+
+# =============================================================================
+# 22. 平台模板目录（项目必需，保留）
+# =============================================================================
+
+# .gitcode/ 是平台模板目录，随仓库同步
+# 包含 CI/CD 工作流、Issue 模板、PR 模板等
+
+# =============================================================================
+# 23. 总线检查报告目录（保留最终版本）
+# =============================================================================
+
+!.bendiwenjian/总线检查/*.md
+
+# =============================================================================
+# 结束
+# =============================================================================

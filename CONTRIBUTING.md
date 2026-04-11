@@ -1,290 +1,502 @@
 # 贡献指南 CONTRIBUTING GUIDE
 
-感谢您对 AgentOS 项目感兴趣！我们欢迎各种形式的贡献，包括代码提交、文档改进、问题报告和功能建议。
+**版本**: v1.1.0  
+**最后更新**: 2026-04-10  
+**状态**: 活跃
 
-## 📋 目录
+> 本文件合并自 `.gitcode/CONTRIBUTING.md` 与根目录 `CONTRIBUTING.md`，消除重复并整合双版本独有内容。
+
+感谢您对 AgentOS 项目感兴趣！我们欢迎各种形式的贡献，包括代码提交、文档改进、Bug 报告和 feature 建议。
+
+## 📑 目录
 
 - [行为准则](#行为准则)
 - [快速导航](#快速导航)
-- [开发环境设置](#开发环境设置)
+- [开发环境搭建](#开发环境搭建)
+- [分支模型](#分支模型)
 - [贡献流程](#贡献流程)
-- [代码规范](#代码规范)
-- [测试要求](#测试要求)
+- [编码规范](#编码规范)
+- [测试规范](#测试规范)
+- [架构原则检查清单](#架构原则检查清单)
 - [提交规范](#提交规范)
-- [常见问题](#常见问题)
+- [代码合并](#代码合并)
+- [认可与感谢](#认可与感谢)
+- [联系方式](#联系方式)
 
 ---
 
 ## 行为准则
 
-本项目采用 [Contributor Covenant](CODE_OF_CONDUCT.md) 作为行为准则。请确保您的行为符合准则要求，共同维护友好、包容的社区环境。
+本项目采用 **Contributor Covenant** 行为准则，确保所有参与者行为符合标准，共同维护友好、包容的开源社区。
 
 ---
 
 ## 快速导航
 
-<!-- From data intelligence emerges. by spharx -->
-- 🐛 [报告 Bug](https://gitee.com/spharx/agentos/issues/new?issue_type=bug) (Gitee 官方)
-- 💡 [提出功能建议](https://gitee.com/spharx/agentos/issues/new?issue_type=feature) (Gitee 官方)
-- 📖 [查看文档](partdocs/)
-- 💬 [参与讨论](https://github.com/spharx-team/AgentOS/discussions) (GitHub 镜像)
+- 🐛 [报告 Bug (AtomGit 官方)](https://atomgit.com/spharx/agentos/issues)
+- 🐛 [报告 Bug (Gitee 官方)](https://gitee.com/spharx/agentos/issues)
+- 🐛 [报告 Bug (GitHub 官方)](https://github.com/SpharxTeam/AgentOS/issues)
+- 💡 [提出功能建议 (AtomGit 官方)](https://atomgit.com/spharx/agentos/issues)
+- 💡 [提出功能建议 (Gitee 官方)](https://gitee.com/spharx/agentos/issues)
+- 💡 [提出功能建议 (GitHub 官方)](https://github.com/SpharxTeam/AgentOS/issues)
+- 📖 [查看文档](./docs/)
+- 💬 [参与讨论 (GitHub 官方)](https://github.com/SpharxTeam/AgentOS/discussions)
+- 📐 [编码规范](./docs/Capital_Specifications/)
+- 🧪 [测试指南](./tests/README.md)
 
 ---
 
-## 开发环境设置
+## 开发环境搭建
 
-### 1. Fork 和克隆项目
+### 贡献前必读文档
+
+**核心文档**：
+- [📘 架构设计原则 V1.8](docs/ARCHITECTURAL_PRINCIPLES.md) - 五维正交体系
+- [🔄 CoreLoopThree 架构](agentos/atoms/coreloopthree/README.md) - 三层认知循环
+- [🧠 MemoryRovol 架构](agentos/atoms/memoryrovol/README.md) - 四层记忆系统
+- [🛡️ cupolas 安全穹顶](agentos/cupolas/README.md) - 安全机制
+- [⚙️ 编译指南](docs/Capital_Guides/installation.md) - 构建步骤
+
+### 1. 基础要求
+
+| 项目 | 要求 |
+|------|------|
+| 操作系统 | Ubuntu 22.04+ / macOS 13+ / Windows 11 (WSL2) |
+| 编译器 | GCC 11+ / Clang 14+ (C11/C++17) |
+| 构建工具 | CMake 3.20+, Ninja |
+| Python | 3.10+ (OpenLab需要) |
+| Go | 1.21+ (Go SDK) |
+| Rust | 1.70+ (Rust SDK) |
+
+系统依赖（通过包管理器安装）：
+- OpenSSL >= 1.1.1
+- libevent >= 2.1
+- FAISS >= 1.7.0 (可选，用于向量检索)
+- SQLite3 >= 3.35
+- libcurl >= 7.68
+- cJSON >= 1.7.15
+
+### 2. Fork 和克隆项目
 
 ```bash
-# 1. 在 Gitee/GitHub上Fork本项目
-#    官方仓库：https://gitee.com/spharx/agentos
-#    镜像仓库：https://github.com/spharx-team/AgentOS
+# 1. 在 AtomGit/Gitee/GitHub 上 Fork 本项目
+#    AtomGit 官方仓库（推荐）：https://atomgit.com/spharx/agentos
+#    Gitee 官方仓库：https://gitee.com/spharx/agentos
+#    GitHub 官方仓库：https://github.com/SpharxTeam/AgentOS
 #
 # 2. 克隆您的 fork
-git clone https://gitee.com/YOUR_USERNAME/agentos.git
-# 或
-git clone https://github.com/YOUR_USERNAME/AgentOS.git
+git clone https://atomgit.com/YOUR_USERNAME/agentos.git
+cd agentos
 
-cd agentos  # 或 cd AgentOS
+# 或克隆 GitHub fork
+# git clone https://github.com/YOUR_USERNAME/AgentOS.git
+# cd AgentOS
 
 # 3. 添加上游仓库
-git remote add upstream https://gitee.com/spharx/agentos.git
-# 或
-git remote add upstream https://github.com/spharx-team/AgentOS.git
+git remote add upstream https://atomgit.com/spharx/agentos.git
 ```
 
-### 2. 安装依赖
+### 3. 安装依赖
 
-#### 使用 Poetry（推荐）
+#### 使用 Poetry（推荐，适用于 Python 部分）
 
 ```bash
-# 安装 Poetry
 curl -sSL https://install.python-poetry.org | python3 -
-
-# 安装依赖
-poetry install
-
-# 激活虚拟环境
-poetry shell
+cd agentos/openlab && poetry install && poetry shell
 ```
 
 #### 使用 pip
 
 ```bash
-# 创建虚拟环境
-python3 -m venv venv
-source venv/bin/activate  # Linux/macOS
-# 或 .\venv\Scripts\activate  # Windows
-
-# 安装依赖
-pip install -e .
-pip install -e ".[dev]"
+python3 -m venv venv && source venv/bin/activate
+cd agentos/openlab && pip install -r requirements.txt
 ```
 
-### 3. 配置预提交钩子
+#### 系统依赖（Ubuntu）
 
 ```bash
-# 安装 pre-commit
-pre-commit install
-
-# 验证安装
-pre-commit --version
+sudo apt install -y build-essential cmake gcc g++ libssl-dev \
+    ninja-build python3 python3-pip git
 ```
 
-### 4. 验证环境
+### 4. 构建项目
 
 ```bash
-# 运行环境验证脚本
-./validate.sh
-
-# 或快速体验
-./quickstart.sh
+mkdir build && cd build
+cmake .. -G Ninja -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTS=ON
+cmake --build . --parallel $(nproc)
+ctest --output-on-failure
 ```
+
+### 5. IDE 配置推荐
+
+**VS Code** (`/.vscode/settings.json`):
+```jsonc
+{
+  "files.associations": {
+    "*.c": "c", "*.h": "c",
+    "*.py": "python", "*.go": "go", "*.rs": "rust"
+  },
+  "editor.formatOnSave": true,
+  "editor.tabSize": 4,
+  "editor.insertSpaces": true,
+  "C_Cpp.clang_format_path": ".clang-format",
+  "python.formatting.provider": "black"
+}
+```
+
+**Git 配置**:
+```bash
+git config user.name "Your Name"
+git config user.email "your.email@example.com"
+git config commit.template .gitmessage-template
+```
+
+---
+
+## 分支模型
+
+AgentOS 采用对称、简洁、稳定、可追溯、友好的分支模型。
+
+```
+main (生产分支，受保护)
+  ↑
+  │ merge
+  │
+develop (开发分支)
+  ↑
+  │ merge PR
+  │
+feature/xxx (功能分支)
+bugfix/xxx (修复分支)
+hotfix/xxx (紧急修复)
+refactor/xxx (重构分支)
+```
+
+### 分支命名规范
+
+| 分支类型 | 前缀 | 示例 | 说明 |
+|---------|------|------|------|
+| 功能分支 | `feature/` | `feature/memory-optimization` | 新功能开发 |
+| Bug 修复 | `bugfix/` | `bugfix/ipc-race-condition` | 普通 Bug 修复 |
+| 紧急修复 | `hotfix/` | `hotfix/security-patch` | 生产环境紧急修复 |
+| 文档改进 | `docs/` | `docs/api-improvement` | 文档更新 |
+| 性能优化 | `perf/` | `perf/faiss-indexing` | 性能优化 |
+| 重构 | `refactor/` | `refactor/error-handling` | 代码重构 |
+| 测试 | `test/` | `test/ipc-benchmark` | 测试用例 |
 
 ---
 
 ## 贡献流程
 
-### 1. 选择 Issue
+### 1. 选择或创建 Issue
 
-- 查看 [GitHub Issues](https://github.com/spharx/spharxworks/issues)
-- 寻找标记为 `good first issue` 或 `help wanted` 的问题
-- 在 Issue 下评论表示您要接手
+在开始工作前，请先查看现有 Issue 列表。如果没有相关 Issue，创建一个新的 Issue 并等待维护者分配。
 
 ### 2. 创建分支
 
+从 `develop` 分支创建工作分支：
+
 ```bash
-# 从 main 分支创建新分支
+git checkout develop && git pull upstream develop
 git checkout -b feature/your-feature-name
-# 或
-git checkout -b fix/issue-123
 ```
 
-**分支命名规范**:
-- `feature/xxx` - 新功能
-- `fix/xxx` - Bug 修复
-- `docs/xxx` - 文档更新
-- `refactor/xxx` - 代码重构
-- `test/xxx` - 测试相关
-- `chore/xxx` - 构建/工具相关
+### 3. 开发和测试
 
-### 3. 进行修改
-
-- 编写代码和测试
-- 确保所有测试通过
-- 更新相关文档
-
-### 4. 提交更改
+按照编码规范编写代码 → 编写单元测试和集成测试 → 确保所有测试通过 → 更新相关文档
 
 ```bash
-# 添加文件
+find . -name "*.c" -o -name "*.h" | xargs clang-format -i
+find . -name "*.py" | xargs black
+cd build && make -j$(nproc)
+ctest --output-on-failure
+cppcheck --enable=all agentos/atoms/src/
+bandit -r agentos/cupolas/
+```
+
+### 4. 提交代码
+
+遵循 Conventional Commits 规范：
+
+```bash
 git add .
-
-# 提交（遵循提交规范）
 git commit -m "feat: add new memory retrieval algorithm"
+```
 
-# 推送到远程
+### 5. 推送并创建 PR
+
+```bash
 git push origin feature/your-feature-name
 ```
 
-### 5. 创建 Pull Request
+然后在 Gitee/GitHub 上创建 Pull Request，填写详细的 PR 描述并关联相关 Issue。
 
-1. 在 GitHub 上访问您的 fork
-2. 点击 "Compare & pull request"
-3. 填写 PR 模板
-4. 等待 CI 检查通过
-5. 请求维护者审查
+### 6. PR 审查清单
 
-### 6. 代码审查
-
-- 回应审查意见
-- 进行必要的修改
-- 获得批准后合并
+维护者会审查您的代码，请确保以下项目通过：
+- [ ] 代码符合编码规范
+- [ ] 所有测试通过
+- [ ] 无编译器警告
+- [ ] 无安全漏洞
+- [ ] 文档已更新
+- [ ] CHANGELOG 已更新
+- [ ] 架构原则检查通过
 
 ---
 
-## 代码规范
+## 编码规范
 
-### Python 代码
+### C/C++ 规范
 
-遵循 [PEP 8](https://pep8.org/) 标准：
+#### 命名约定
+
+```c
+// 函数: 动词_名词 或 agentos_动词_名词()
+int agentos_memory_write(const void* data, size_t len);
+
+// 类型: 名词_t 或 AgentOs_Noun_T
+typedef struct memory_record_s memory_record_t;
+
+// 常量: AGENTOS_NOUNN 或 kNounn
+#define AGENTOS_MAX_MEMORY_SIZE (1024 * 1024)
+static const int kDefaultTimeout = 5000;
+
+// 变量: camelCase 或 snake_case (根据上下文)
+int memoryRecordCount;
+size_t buffer_size;
+
+// 宏: AGENTOS_MACRO_NAME()
+#define AGENTOS_LOG_ERROR(fmt, ...) ...
+```
+
+#### 注释规范
+
+所有公共 API 必须有 Doxygen 注释：
+
+```c
+/**
+ * @brief 写入记忆到MemoryRovol系统
+ *
+ * @param data 要写入的数据指针
+ * @param data_len 数据长度（字节）
+ * @param metadata 元数据JSON字符串
+ * @param[out] record_id 输出的记录ID（调用者需释放）
+ *
+ * @return AGENTOS_SUCCESS 成功
+ * @return AGENTOS_ERR_INVALID_PARAM 参数无效
+ * @return AGENTOS_ERR_NO_MEMORY 内存不足
+ *
+ * @note 此函数会自动进行L1→L2抽象
+ * @warning 调用者必须释放返回的record_id内存
+ *
+ * @code
+ * char* record_id = NULL;
+ * int ret = agentos_memory_write(data, len, meta, &record_id);
+ * if (ret == AGENTOS_SUCCESS) {
+ *     // 使用 record_id
+ *     free(record_id);
+ * }
+ * @endcode
+ */
+AGENTOS_EXPORT int agentos_memory_write(
+    const void* data,
+    size_t data_len,
+    const char* metadata,
+    char** record_id);
+```
+
+- 遵循 [C/C++ 编码规范](./docs/Capital_Specifications/)
+- 使用 `.clang-format` 和 `.clang-tidy` 进行代码格式化
+
+### Python 规范
+
+- 遵循 PEP 8
+- 使用类型注解
+- 编写完整 docstring
 
 ```python
-# 好的示例
-def calculate_memory_similarity(query: str, documents: list[str]) -> float:
-    """计算查询与文档列表的相似度"""
-    if not documents:
-        return 0.0
-
-    # 实现逻辑
+def memory_write(
+    data: bytes,
+    metadata: Optional[Dict[str, Any]] = None
+) -> str:
+    """
+    写入记忆到MemoryRovol系统
+    
+    Args:
+        data: 要写入的数据
+        metadata: 可选的元数据字典
+        
+    Returns:
+        记录ID字符串
+        
+    Raises:
+        ValueError: 当data为空时
+        MemoryError: 当内存不足时
+        
+    Example:
+        >>> record_id = memory_write(b"hello world", {"type": "text"})
+        >>> print(record_id)
+        'rec_abc123'
+    """
     pass
-
-
-class MemoryIndex:
-    """记忆索引管理类"""
-
-    def __init__(self, dimension: int):
-        self.dimension = dimension
 ```
 
-**格式化**:
-```bash
-# 使用 black 格式化
-black .
+### Go 规范
 
-# 排序 imports
-isort .
+```go
+// MemoryWrite 写入记忆到MemoryRovol系统
+//
+// Parameters:
+//   - data: 要写入的数据字节切片
+//   - opts: 可选的写入选项
+//
+// Returns:
+//   - string: 记录ID
+//   - error: 错误信息
+//
+// Example:
+//
+//	recordID, err := memory.Write([]byte("hello"), nil)
+//	if err != nil {
+//	    log.Fatal(err)
+//	}
+func MemoryWrite(data []byte, opts *WriteOptions) (string, error) {
+	// implementation
+}
 ```
 
-### C++ 代码
+### 通用要求
 
-遵循 Google C++ Style Guide：
-
-```cpp
-// 好的示例
-class MemoryManager {
- public:
-  explicit MemoryManager(size_t capacity);
-  ~MemoryManager();
-
-  bool Store(const std::string& key, const MemoryBlock& block);
-  std::optional<MemoryBlock> Retrieve(const std::string& key);
-
- private:
-  size_t capacity_;
-  std::unordered_map<std::string, MemoryBlock> cache_;
-};
-```
-
-**格式化**:
-```bash
-# 使用 clang-format
-clang-format -i src/**/*.cpp
-```
-
-### 文档规范
-
-- 使用清晰的中文或英文
-- 代码示例要完整可运行
-- 包含必要的注释和说明
+- **命名语义化**: 名称精确表达语义，避免缩写
+- **错误处理**: 所有错误必须处理，不能忽略
+- **资源管理**: 使用 RAII 模式，明确所有权
+- **线程安全**: 明确标注函数的线程安全性
+- **日志规范**: 使用统一日志系统，结构化输出
 
 ---
 
-## 测试要求
+## 测试规范
 
-### 编写测试
+### 测试分类
+
+| 类型 | 目录 | 说明 |
+|------|------|------|
+| **单元测试** | tests/unit/ | 单个函数/类测试 |
+| **集成测试** | tests/integration/ | 多模块交互测试 |
+| **契约测试** | tests/contract/ | 接口契约验证 |
+| **性能测试** | tests/perf/ | 性能基准测试 |
+| **安全测试** | tests/security/ | 安全漏洞扫描 |
+
+### 测试覆盖率要求
+
+| 模块 | 目标覆盖率 | 当前覆盖率 |
+|------|-----------|-----------|
+| corekern | ≥95% | 95% |
+| coreloopthree | ≥92% | 92% |
+| memoryrovol | ≥90% | 90% |
+| cupolas | ≥88% | 88% |
+| daemon | ≥85% | 85% |
+| commons | ≥88% | 88% |
+
+### 测试命名约定
 
 ```python
-# tests/unit/test_memory.py
-import pytest
-from agentos.memory import MemoryIndex
-
-
-class TestMemoryIndex:
-    """测试记忆索引功能"""
-
-    def test_create_index(self):
-        """测试创建索引"""
-        index = MemoryIndex(dimension=768)
-        assert index.dimension == 768
-
-    def test_add_vectors(self):
-        """测试添加向量"""
-        index = MemoryIndex(dimension=768)
-        vectors = [[0.1] * 768, [0.2] * 768]
-        index.add(vectors)
-        assert index.size() == 2
+class TestMemoryRovol:
+    def test_write_should_return_valid_record_id(self):
+        """测试正常写入应返回有效记录ID"""
+        
+    def test_write_with_empty_data_should_raise_error(self):
+        """测试空数据应抛出异常"""
+        
+    def test_concurrent_writes_should_be_thread_safe(self):
+        """测试并发写入应是线程安全的"""
 ```
 
 ### 运行测试
 
 ```bash
 # 运行所有测试
-make test
-
-# 运行单元测试
-make test-unit
+cd tests && python run_tests.py
 
 # 运行特定测试
-pytest tests/unit/test_memory.py -v
+python -m pytest tests/unit/coreloopthree/test_loop.py -v
 
 # 生成覆盖率报告
-pytest --cov=agentos --cov-report=html
+make coverage
 ```
 
-### 测试覆盖率
+---
 
-- 新功能必须包含单元测试
-- 核心模块覆盖率 > 80%
-- 关键路径覆盖率 > 90%
+## 架构原则检查清单
+
+在提交 PR 前，请检查是否符合五维正交原则：
+
+### 维度一：系统观 (System View)
+- [ ] S-1 反馈闭环: 是否实现完整的感知-决策-执行-反馈循环？
+- [ ] S-2 层次分解: 是否保持清晰的层次结构？
+- [ ] S-3 总体设计部: 是否有全局协调层？
+- [ ] S-4 涌现性管理: 是否抑制负面涌现？
+
+### 维度二：内核观 (Kernel View)
+- [ ] K-1 内核极简: 内核是否只保留原子机制？
+- [ ] K-2 接口契约化: 公共接口是否有完整契约定义？
+- [ ] K-3 服务隔离: 守护进程是否独立运行？
+- [ ] K-4 可插拔策略: 策略是否可运行时替换？
+
+### 维度三：认知观 (Cognition View)
+- [ ] C-1 双系统协同: 是否实现快慢路径分离？
+- [ ] C-2 增量演化: 是否支持增量规划？
+- [ ] C-3 记忆卷载: 记忆是否逐层提炼？
+- [ ] C-4 遗忘机制: 是否有合理遗忘策略？
+
+### 维度四：工程观 (Engineering View)
+- [ ] E-1 安全内生: 安全是否内嵌于每个环节？
+- [ ] E-2 可观测性: 是否提供完整指标和追踪？
+- [ ] E-3 资源确定性: 资源生命周期是否确定？
+- [ ] E-4 跨平台一致性: 多平台行为是否一致？
+
+### 维度五：设计美学 (Aesthetic View)
+- [ ] A-1 简约至上: 是否用最少接口提供最大价值？
+- [ ] A-2 极致细节: 边界情况是否处理完善？
+- [ ] A-3 人文关怀: 开发者体验是否友好？
+- [ ] A-4 完美主义: 是否追求极致品质？
 
 ---
 
 ## 提交规范
 
-### Commit Message 格式
+AgentOS 采用 **Conventional Commits** 规范。
 
-遵循 [Conventional Commits](https://www.conventionalcommits.org/)：
+### 提交类型
+
+| 类型 | 说明 | 示例 |
+|------|------|------|
+| `feat` | 新功能 | `feat: add L4 pattern layer` |
+| `fix` | Bug 修复 | `fix: resolve IPC race condition` |
+| `docs` | 文档更新 | `docs: update API documentation` |
+| `style` | 代码格式 | `style: format code with clang-format` |
+| `refactor` | 重构 | `refactor: simplify error handling` |
+| `perf` | 性能优化 | `perf: optimize FAISS indexing` |
+| `test` | 测试 | `test: add IPC benchmark tests` |
+| `chore` | 构建/工具 | `chore: update CMakeLists.txt` |
+| `ci` | CI/CD 配置变更 | `ci: add caching for pip dependencies` |
+| `revert` | 回滚提交 | `revert: fix IPC race condition` |
+
+### Scope 范围
+
+| Scope | 对应模块 |
+|-------|----------|
+| `atoms` | 内核层 |
+| `daemon` | 服务层 |
+| `cupolas` | 安全层 |
+| `commons` | 基础库 |
+| `toolkit` | SDK |
+| `openlab` | 开放生态 |
+| `docs` | 文档 |
+| `ci` | CI/CD |
+
+### 提交格式
 
 ```
 <type>(<scope>): <subject>
@@ -294,106 +506,99 @@ pytest --cov=agentos --cov-report=html
 <footer>
 ```
 
-### Type 类型
-
-- `feat`: 新功能
-- `fix`: Bug 修复
-- `docs`: 文档更新
-- `style`: 代码格式调整
-- `refactor`: 代码重构
-- `test`: 测试相关
-- `chore`: 构建/工具相关
-
-### 示例
-
-```bash
-# 新功能
-feat(memory): add FAISS vector index support
-
-# Bug 修复
-fix(scheduler): resolve race condition in task queue
-
-# 文档更新
-docs(readme): update installation instructions
-
-# 代码重构
-refactor(core): extract memory management to separate class
+**示例**:
 ```
+feat(memoryrovol): add L4 pattern mining algorithm
+
+Implement persistent homology analysis for pattern detection
+in the MemoryRovol system, enabling automatic knowledge
+abstraction from raw memory data.
+
+- Add pattern_mining.c module
+- Implement PH computation algorithm
+- Add unit tests with >90% coverage
+
+Closes #123
+```
+
+---
+
+## 代码合并
+
+### 合并要求
+
+- ✅ 所有测试通过
+- ✅ 代码审查通过
+- ✅ 文档已更新
+- ✅ 变更日志已更新
+- ✅ 无冲突
+
+### 合并策略
+
+- **功能分支**: 使用 `squash and merge`
+- **Bug 修复**: 使用 `merge commit`
+- **紧急修复**: 使用 `rebase and merge`
+
+---
+
+## 认可与感谢
+
+所有贡献者将被记录在以下位置：
+
+- [AUTHORS.md](./AUTHORS.md) - 核心贡献者名单
+- [CHANGELOG.md](./CHANGELOG.md) - 版本变更日志
+- [ACKNOWLEDGMENTS.md](./ACKNOWLEDGMENTS.md) - 感谢名单
+
+我们坚信：**开源因贡献而精彩！**
 
 ---
 
 ## 常见问题
 
-### Q: 如何开始第一个贡献？
+### Q1: 我是新手，可以从哪里开始？
 
-A: 从简单的任务开始，比如：
-- 修复文档中的拼写错误
-- 改进错误消息
-- 添加单元测试
-- 优化性能瓶颈
+**A**: 欢迎！建议从以下任务开始：
+1. 阅读[快速开始指南](docs/Capital_Guides/getting_started.md)
+2. 选择一个标记为 `good first issue` 的任务
+3. 加入我们的开发者社区获取帮助
 
-### Q: 遇到问题怎么办？
+### Q2: 我可以提交大型的功能吗？
 
-A: 可以通过以下方式获取帮助：
-- 查看现有文档
-- 在 Issue 中提问
-- 在 Discussions 中讨论
-- 联系维护者
+**A**: 当然可以！但建议先创建 Issue 讨论设计方案，获得社区反馈后再实现。大型功能可能需要分多个 PR 提交。
 
-### Q: 多久能得到回复？
+### Q3: 我的代码风格和现有代码不一致怎么办？
 
-A: 我们承诺：
-- Issue: 48 小时内回复
-- PR: 5 个工作日内审查
-- 问题咨询：尽快回复
+**A**: 请遵循项目的编码规范。如果发现现有代码不符合规范，可以单独提一个 PR 来统一风格。
 
-### Q: 可以提交破坏性变更吗？
+### Q4: 如何获得代码审查帮助？
 
-A: 破坏性变更需要：
-1. 提前在 Issue 中讨论
-2. 提供迁移指南
-3. 获得至少 2 个维护者批准
-4. 在主版本更新时引入
-
----
-
-## 认可
-
-所有贡献者都将被列入 [AUTHORS.md](AUTHORS.md)，并在 CHANGELOG 中被提及。
-
-重要贡献还将被：
-- 在官方博客中介绍
-- 邀请成为核心贡献者
-- 获得项目纪念品（可选）
+**A**: 可以在 PR 中添加审查请求标签，或在社区频道寻求帮助。
 
 ---
 
 ## 联系方式
 
-- **Gitee Issues**: https://gitee.com/spharx/agentos/issues (官方，首选)
-- **GitHub Issues**: https://github.com/spharx-team/AgentOS/issues (镜像)
-- **技术支持**: lidecheng@spharx.cn
-- **安全问题**: wangliren@spharx.cn
-- **商务合作**: zhouzhixian@spharx.cn
-- **官方网站**: https://spharx.cn
+如有任何问题，请通过以下方式联系我们：
 
-### 仓库链接
-
-- **官方仓库**: https://gitee.com/spharx/agentos
-- **镜像仓库**: https://github.com/spharx-team/AgentOS
+| 用途 | 联系方式 |
+|------|---------|
+| **技术支持** | lidecheng@spharx.cn |
+| **安全问题** | wangliren@spharx.cn |
+| **商务合作** | zhouzhixian@spharx.cn |
+| **AtomGit Issues** | https://atomgit.com/spharx/agentos/issues |
+| **Gitee Issues** | https://gitee.com/spharx/agentos/issues |
+| **GitHub Issues** | https://github.com/SpharxTeam/AgentOS/issues |
+| **GitHub Discussions** | https://github.com/SpharxTeam/AgentOS/discussions |
 
 ---
-
-感谢您的贡献！🎉
 
 <div align="center">
 
-**SPHARX 极光感知科技**
+**再次感谢您的贡献！🎉**
 
-*From data intelligence emerges*
+> *"From data intelligence emerges."*  
+> **始于数据，终于智能。**
+
+© 2026 SPHARX Ltd. All Rights Reserved.
 
 </div>
-
----
-
-© 2026 SPHARX Ltd. 保留所有权利。
