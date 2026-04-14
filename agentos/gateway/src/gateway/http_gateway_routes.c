@@ -23,7 +23,9 @@
 #include <cJSON.h>
 #include <string.h>
 #include <stdlib.h>
-#include <stdatomic.h>
+
+/* 跨平台原子操作支持 - 使用统一的 atomic_compat.h */
+#include <agentos/atomic_compat.h>
 
 /* ========== 路由处理函数实现 ========== */
 

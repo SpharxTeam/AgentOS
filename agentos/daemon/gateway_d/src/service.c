@@ -19,7 +19,14 @@
 
 #include <stdlib.h>
 #include <string.h>
-#include <stdatomic.h>
+
+/* 跨平台原子操作支持 - 使用统一的 atomic_compat.h */
+#include <agentos/atomic_compat.h>
+
+#ifdef _WIN32
+    #define WIN32_LEAN_AND_MEAN
+    #include <windows.h>
+#endif
 
 /* ==================== 内部结构 ==================== */
 
@@ -35,6 +42,10 @@ typedef struct {
 /**
  * @brief 网关服务内部结构
  */
+#ifdef _WIN32
+/* Windows 平台原子类型兼容定义 */
+typedef atomic_uint64_t atomic_uint_fast64_t;
+#endif
 struct gateway_service_s {
     gateway_service_config_t config;    /**< 服务配置 */
     agentos_svc_state_t state;          /**< 服务状态 */

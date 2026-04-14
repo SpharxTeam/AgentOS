@@ -19,11 +19,61 @@ option(BUILD_TESTS "Build unit tests" OFF)
 option(BUILD_COVERAGE "Build with code coverage" OFF)
 
 # 查找依赖
-find_package(PkgConfig REQUIRED)
 find_package(Threads REQUIRED)
-pkg_check_modules(LIBCURL REQUIRED libcurl)
-pkg_check_modules(YAML REQUIRED yaml-0.1)
-pkg_check_modules(CJSON REQUIRED libcjson)
+
+# 使用与根项目一致的依赖查找方式
+# 在Windows上，PkgConfig通常不可用，使用find_package替代
+if(WIN32)
+    find_package(PkgConfig QUIET)
+else()
+    find_package(PkgConfig)
+endif()
+
+# libcurl查找
+if(PKG_CONFIG_FOUND)
+    pkg_check_modules(LIBCURL QUIET libcurl)
+endif()
+if(NOT LIBCURL_FOUND)
+    # 尝试使用CMake的find_package
+    find_package(CURL QUIET)
+    if(CURL_FOUND)
+        set(LIBCURL_FOUND TRUE)
+        set(LIBCURL_LIBRARIES ${CURL_LIBRARIES})
+        set(LIBCURL_INCLUDE_DIRS ${CURL_INCLUDE_DIRS})
+        message(STATUS "libcurl found via find_package")
+    else()
+        message(WARNING "libcurl not found, some network features may be limited")
+    endif()
+endif()
+
+# libyaml查找
+if(PKG_CONFIG_FOUND)
+    pkg_check_modules(YAML QUIET yaml-0.1)
+endif()
+if(NOT YAML_FOUND)
+    find_package(YAML QUIET)
+    if(YAML_FOUND)
+        message(STATUS "libyaml found via find_package")
+    else()
+        message(WARNING "libyaml not found, YAML functionality may be limited")
+    endif()
+endif()
+
+# cJSON查找
+if(PKG_CONFIG_FOUND)
+    pkg_check_modules(CJSON QUIET libcjson)
+endif()
+if(NOT CJSON_FOUND)
+    find_package(cJSON QUIET)
+    if(cJSON_FOUND)
+        set(CJSON_FOUND TRUE)
+        set(CJSON_LIBRARIES cjson)
+        set(CJSON_INCLUDE_DIRS ${cJSON_INCLUDE_DIRS})
+        message(STATUS "cJSON found via find_package")
+    else()
+        message(WARNING "cJSON not found, JSON functionality may be limited")
+    endif()
+endif()
 
 # ==================== 重要: 添加 commons 依赖 ====================
 # 设置 commons 路径
@@ -49,15 +99,22 @@ endif()
 # - svc_cache.c -> agentos/commons/utils/cache
 
 set(SVC_COMMON_SOURCES
+    src/svc_common.c          # 服务框架核心实现
     src/ipc_client.c
+    src/ipc_service_bus.c     # IPC服务总线
+    src/service_discovery.c   # 跨进程服务发现
+    src/circuit_breaker.c     # 熔断器与自愈
+    src/unified_metrics.c     # 统一指标收集
+    src/alert_manager.c       # 智能告警管理
+    src/config_manager.c      # 统一配置管理
     src/svc_auth.c
     src/daemon_security.c
     src/jsonrpc_helpers.c
     src/method_dispatcher.c
     src/safe_string_utils.c
     src/input_validator.c
-    src/param_validator.c     # JSON-RPC 参数验证工具
-    src/log_sanitizer.c       # 日志脱敏过滤器
+    src/param_validator.c
+    src/log_sanitizer.c
 )
 
 # 创建静态库
@@ -121,19 +178,29 @@ target_include_directories(svc_common PUBLIC
     ${COMMONS_DIR}/utils/ipc/include
 )
 
-target_include_directories(svc_common PRIVATE
-    ${LIBCURL_INCLUDE_DIRS}
-    ${YAML_INCLUDE_DIRS}
-    ${CJSON_INCLUDE_DIRS}
-)
+# 条件包含外部库头文件
+if(LIBCURL_FOUND)
+    target_include_directories(svc_common PRIVATE ${LIBCURL_INCLUDE_DIRS})
+endif()
+if(YAML_FOUND)
+    target_include_directories(svc_common PRIVATE ${YAML_INCLUDE_DIRS})
+endif()
+if(CJSON_FOUND)
+    target_include_directories(svc_common PRIVATE ${CJSON_INCLUDE_DIRS})
+endif()
 
 # 链接外部库
-target_link_libraries(svc_common PUBLIC
-    ${LIBCURL_LIBRARIES}
-    ${YAML_LIBRARIES}
-    ${CJSON_LIBRARIES}
-    Threads::Threads
-)
+target_link_libraries(svc_common PUBLIC Threads::Threads)
+
+if(LIBCURL_FOUND)
+    target_link_libraries(svc_common PUBLIC ${LIBCURL_LIBRARIES})
+endif()
+if(YAML_FOUND)
+    target_link_libraries(svc_common PUBLIC ${YAML_LIBRARIES})
+endif()
+if(CJSON_FOUND)
+    target_link_libraries(svc_common PUBLIC ${CJSON_LIBRARIES})
+endif()
 
 # 编译选项
 if(BUILD_COVERAGE)
@@ -197,8 +264,14 @@ install(FILES
     ${CMAKE_CURRENT_SOURCE_DIR}/include/method_dispatcher.h
     ${CMAKE_CURRENT_SOURCE_DIR}/include/safe_string_utils.h
     ${CMAKE_CURRENT_SOURCE_DIR}/include/input_validator.h
-    ${CMAKE_CURRENT_SOURCE_DIR}/include/param_validator.h  # JSON-RPC 参数验证
-    ${CMAKE_CURRENT_SOURCE_DIR}/include/log_sanitizer.h    # 日志脱敏过滤器
+    ${CMAKE_CURRENT_SOURCE_DIR}/include/param_validator.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/include/log_sanitizer.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/include/ipc_service_bus.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/include/service_discovery.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/include/circuit_breaker.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/include/unified_metrics.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/include/alert_manager.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/include/config_manager.h
     DESTINATION include/agentos
 )
 

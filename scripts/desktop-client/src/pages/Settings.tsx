@@ -20,9 +20,11 @@ import {
 } from 'lucide-react';
 import { useI18n } from '../i18n';
 import sdk from "../services/agentos-sdk";
+import { useAlert } from "../components/useAlert";
 
 const Settings: React.FC = () => {
   const { t, language, setLanguage, availableLanguages } = useI18n();
+  const { success, error, info, confirm: confirmModal } = useAlert();
   const [backendUrl, setBackendUrl] = useState<string>('http://localhost:18789');
   const [theme, setTheme] = useState<'light' | 'dark' | 'auto'>('light');
   const [autoStart, setAutoStart] = useState<boolean>(false);
@@ -109,20 +111,31 @@ const Settings: React.FC = () => {
   const handleTestConnection = async () => {
     try {
       const result = await sdk.getHealthStatus();
-      alert(result.overall === "healthy" ? t.settings.connectionSuccess.replace('{url}', backendUrl) : t.settings.connectionFailed.replace('{error}', result.overall));
-    } catch (error) {
-      alert(t.settings.connectionError.replace('{error}', String(error)));
+      if (result.overall === "healthy") {
+        success("连接成功", t.settings.connectionSuccess.replace('{url}', backendUrl));
+      } else {
+        error("连接失败", t.settings.connectionFailed.replace('{error}', result.overall));
+      }
+    } catch (err) {
+      error("连接错误", t.settings.connectionError.replace('{error}', String(err)));
     }
   };
 
-  const handleResetSettings = () => {
-    if (confirm(t.settings.resetConfirm)) {
+  const handleResetSettings = async () => {
+    const confirmed = await confirmModal({
+      type: 'warning',
+      title: '重置设置',
+      message: t.settings.resetConfirm || '确定要重置所有设置吗？此操作无法撤销。',
+      confirmText: '重置',
+      cancelText: '取消',
+    });
+    if (confirmed) {
       localStorage.removeItem('agentos_settings');
       setBackendUrl('http://localhost:18789');
       setTheme('light');
       setAutoStart(false);
       setNotificationEnabled(true);
-      setLanguage('zh');
+      info("已重置", "设置已恢复为默认值");
     }
   };
 
@@ -136,10 +149,22 @@ const Settings: React.FC = () => {
     <div className="page-container">
       {/* Page Header */}
       <div className="page-header">
-        <h1>{t.settings.title}</h1>
-        <p style={{ color: "var(--text-secondary)", fontSize: "15px" }}>
-          {t.settings.description}
-        </p>
+        <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
+          <div style={{
+            width: "44px", height: "44px", borderRadius: "var(--radius-md)",
+            background: "linear-gradient(135deg,#6366f1,#818cf8)",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            boxShadow: "0 4px 16px rgba(99,102,241,0.35), 0 0 0 1px rgba(255,255,255,0.08) inset",
+          }}>
+            <Palette size={20} color="white" />
+          </div>
+          <div>
+            <h1>{t.settings.title}</h1>
+            <p style={{ color: "var(--text-secondary)", fontSize: "13px", margin: 0 }}>
+              {t.settings.description}
+            </p>
+          </div>
+        </div>
       </div>
 
       {/* Save Status Banner */}
@@ -236,7 +261,7 @@ const Settings: React.FC = () => {
 
           {/* Toggle Options */}
           <div style={{ display: "flex", flexDirection: "column", gap: "16px", marginTop: "8px" }}>
-            <label className="checkbox-label" style={{ padding: "12px", background: "var(--bg-tertiary)", borderRadius: "var(--radius-md)" }}>
+            <label className="checkbox-label" style={{ padding: "12px", background: "var(--bg-tertiary)", borderRadius: "var(--radius-md)", transition: "all 0.2s ease", border: "1px solid var(--border-subtle)" }}>
               <input type="checkbox" checked={autoStart} onChange={(e) => setAutoStart(e.target.checked)} />
               <div>
                 <span style={{ fontWeight: 500 }}>{t.settings.autoStart}</span>
@@ -244,7 +269,7 @@ const Settings: React.FC = () => {
               </div>
             </label>
 
-            <label className="checkbox-label" style={{ padding: "12px", background: "var(--bg-tertiary)", borderRadius: "var(--radius-md)" }}>
+            <label className="checkbox-label" style={{ padding: "12px", background: "var(--bg-tertiary)", borderRadius: "var(--radius-md)", transition: "all 0.2s ease", border: "1px solid var(--border-subtle)" }}>
               <input type="checkbox" checked={notificationEnabled} onChange={(e) => setNotificationEnabled(e.target.checked)} />
               <div>
                 <span style={{ fontWeight: 500 }}>
@@ -307,7 +332,7 @@ const Settings: React.FC = () => {
         </div>
 
         {/* System Info Card */}
-        <div className="card card-elevated">
+        <div className="card card-elevated" style={{ border: "1px solid var(--border-subtle)", background: "var(--bg-secondary)", boxShadow: 'var(--shadow-sm)', transition: "all 0.2s ease" }}>
           <h3 className="card-title">
             <Info size={18} />
             {t.settings.system}
@@ -330,7 +355,7 @@ const Settings: React.FC = () => {
         </div>
 
         {/* Actions Card */}
-        <div className="card card-elevated">
+        <div className="card card-elevated" style={{ border: "1px solid var(--border-subtle)", background: "var(--bg-secondary)", boxShadow: 'var(--shadow-sm)', transition: "all 0.2s ease" }}>
           <h3 className="card-title">
             <Save size={18} />
             {t.settings.actions}
@@ -341,7 +366,7 @@ const Settings: React.FC = () => {
               className="btn btn-primary btn-lg"
               onClick={handleSaveSettings}
               disabled={saveStatus === 'saving'}
-              style={{ width: "100%" }}
+              style={{ width: "100%", transition: "all 0.2s ease" }}
             >
               {saveStatus === 'saving' ? (
                 <>
@@ -357,19 +382,26 @@ const Settings: React.FC = () => {
             </button>
 
             <div style={{ display: "flex", gap: "10px" }}>
-              <button className="btn btn-secondary" onClick={handleResetSettings} style={{ flex: 1 }}>
+              <button className="btn btn-secondary" onClick={handleResetSettings} style={{ flex: 1, transition: "all 0.2s ease" }}>
                 <RotateCcw size={16} />
                 {t.settings.reset}
               </button>
               <button
                 className="btn btn-danger"
-                onClick={() => {
-                  if (confirm(t.settings.clearCacheConfirm)) {
+                onClick={async () => {
+                  const confirmed = await confirmModal({
+                    type: 'danger',
+                    title: '清除缓存',
+                    message: t.settings.clearCacheConfirm || '确定要清除所有本地缓存数据吗？',
+                    confirmText: '清除',
+                    cancelText: '取消',
+                  });
+                  if (confirmed) {
                     localStorage.clear();
-                    alert(t.settings.cacheCleared);
+                    info("缓存已清除", t.settings.cacheCleared || "所有缓存已清理");
                   }
                 }}
-                style={{ flex: 1 }}
+                style={{ flex: 1, transition: "all 0.2s ease" }}
               >
                 <Trash2 size={16} />
                 {t.settings.clearCache}

@@ -28,13 +28,18 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
-#include <stdatomic.h>
 #include <time.h>
 
+/* 跨平台原子操作支持 - 使用统一的 atomic_compat.h */
+#include <agentos/atomic_compat.h>
+
+/* 平台特定头文件 */
 #ifdef _WIN32
-#include <winsock2.h>
+    #define WIN32_LEAN_AND_MEAN
+    #include <winsock2.h>
+    #include <windows.h>
 #else
-#include <sys/time.h>
+    #include <sys/time.h>
 #endif
 
 /* ========== 前向声明 ========== */

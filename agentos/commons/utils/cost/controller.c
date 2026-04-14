@@ -18,13 +18,17 @@
 #include "../../utils/string/include/string_compat.h"
 #include <string.h>
 #include <time.h>
-#include <stdatomic.h>
 
+/* 跨平台原子操作支持 - 使用统一的 atomic_compat.h */
+#include <agentos/atomic_compat.h>
+
+/* 平台特定头文件 */
 #ifdef _WIN32
-#include <windows.h>
+    #define WIN32_LEAN_AND_MEAN
+    #include <windows.h>
 #else
-#include <pthread.h>
-#include <unistd.h>
+    #include <pthread.h>
+    #include <unistd.h>
 #endif
 
 /**

@@ -16,16 +16,12 @@
 #ifndef AGENTOS_SCHEDULER_CORE_H
 #define AGENTOS_SCHEDULER_CORE_H
 
-#include "task.h"
+#include "../../include/task.h"
 #include <stddef.h>
+#include <stdint.h>
 
-#ifdef _WIN32
-#include <windows.h>
-/* Windows 平台的原子操作替代实现 */
-#define _Atomic volatile
-#else
-#include <stdatomic.h>
-#endif
+/* 跨平台原子操作支持 - 使用统一的 atomic_compat.h */
+#include <agentos/atomic_compat.h>
 
 #ifdef __cplusplus
 extern "C" {

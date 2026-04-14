@@ -24,9 +24,32 @@ else()
 endif()
 
 # ========== 依赖 ==========
-find_package(cJSON REQUIRED)
-find_package(libmicrohttpd REQUIRED)
-find_package(libwebsockets REQUIRED)
+# 使用与根项目一致的依赖查找方式
+find_package(cJSON QUIET)
+find_package(libmicrohttpd QUIET)
+find_package(libwebsockets QUIET)
+
+# 条件定义和消息
+if(cJSON_FOUND)
+    message(STATUS "cJSON found: ${cJSON_VERSION}")
+    add_definitions(-DGATEWAY_HAS_CJSON=1)
+else()
+    message(WARNING "cJSON not found, JSON functionality may be limited")
+endif()
+
+if(libmicrohttpd_FOUND)
+    message(STATUS "libmicrohttpd found")
+    add_definitions(-DGATEWAY_HAS_LIBMICROHTTPD=1)
+else()
+    message(WARNING "libmicrohttpd not found, HTTP gateway may be limited")
+endif()
+
+if(libwebsockets_FOUND)
+    message(STATUS "libwebsockets found")
+    add_definitions(-DGATEWAY_HAS_LIBWEBSOCKETS=1)
+else()
+    message(WARNING "libwebsockets not found, WebSocket gateway may be limited")
+endif()
 
 # 核心头文件路径
 set(COREKERN_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../atoms/corekern")
@@ -46,6 +69,13 @@ include_directories(
     ${COMMONS_DIR}/utils/sync/include
 )
 
+# protocols 模块（统一协议栈）
+set(PROTOCOLS_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../protocols")
+include_directories(
+    ${PROTOCOLS_DIR}/include
+    ${PROTOCOLS_DIR}/protocol/include
+)
+
 # ========== 源文件 ==========
 set(GATEWAY_SOURCES
     src/gateway/gateway_api.c
@@ -56,6 +86,7 @@ set(GATEWAY_SOURCES
     src/utils/jsonrpc.c
     src/utils/syscall_router.c
     src/utils/gateway_rpc_handler.c
+    src/utils/gateway_protocol_handler.c
     src/utils/gateway_rate_limiter.c
 )
 
@@ -68,6 +99,7 @@ set(GATEWAY_HEADERS
     src/utils/jsonrpc.h
     src/utils/syscall_router.h
     src/utils/gateway_utils.h
+    src/utils/gateway_protocol_handler.h
     src/utils/gateway_rate_limiter.h
 )
 
@@ -82,13 +114,20 @@ target_include_directories(gateway
         ${CMAKE_CURRENT_SOURCE_DIR}/src
 )
 
-target_link_libraries(gateway
-    PUBLIC
-        cjson
-    PRIVATE
-        microhttpd
-        websockets
-)
+target_link_libraries(gateway PRIVATE agentos_protocols)
+
+# 条件链接依赖库
+if(cJSON_FOUND)
+    target_link_libraries(gateway PUBLIC cjson)
+endif()
+
+if(libmicrohttpd_FOUND)
+    target_link_libraries(gateway PRIVATE microhttpd)
+endif()
+
+if(libwebsockets_FOUND)
+    target_link_libraries(gateway PRIVATE websockets)
+endif()
 
 # ========== 安装 ==========
 install(TARGETS gateway

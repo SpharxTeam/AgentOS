@@ -19,6 +19,17 @@
 #include "sync.h"
 #include "memory_compat.h"
 
+#ifdef _WIN32
+    #define WIN32_LEAN_AND_MEAN
+    #include <winsock2.h>
+    #include <ws2tcpip.h>
+    #include <windows.h>
+    #include <synchapi.h>
+#else
+    #include <pthread.h>
+    #include <semaphore.h>
+#endif
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -47,10 +58,11 @@ struct sync_recursive_mutex {
     const char* name;
     sync_stats_t stats;
     size_t recursive_count;
-    pthread_t owner_thread;
 #ifdef _WIN32
+    DWORD owner_thread;
     CRITICAL_SECTION mutex;
 #else
+    pthread_t owner_thread;
     pthread_mutex_t mutex;
 #endif
 };
